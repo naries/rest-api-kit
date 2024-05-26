@@ -41,7 +41,7 @@ export function useStore(): StoreHookReturnType {
             payload: { id, data, options }
         }),
         get: (id: string) => {
-            return state.store[id].result;
+            return state.store[id]?.result;
         },
         clear: (id: string) => dispatch({
             type: "store/clear",

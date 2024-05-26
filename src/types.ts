@@ -21,7 +21,7 @@ export type RequestStateType = {
     isSuccess: boolean;
 }
 
-export type ActionTypes = 'loading-start' | 'loading-stop' | 'update-data' | 'update-error' | 'reset-data' | 'reset-error';
+export type ActionTypes = 'loading/start' | 'loading/stop' | 'data/success' | 'data/error' | 'data/reset' | 'error/reset';
 
 export type QueryHookReturnType = [(body?: Record<string, string>) => void, state: RequestStateType];
 
@@ -32,7 +32,8 @@ export interface IOptions {
     preferCachevalue: boolean; // uses cached value if available,
     method: MethodType;
     saveToCache: boolean;
-    updates: string[]
+    updates: string[],
+    endpointName: string;
 }
 
 export interface StoreHookReturnType {

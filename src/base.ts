@@ -13,7 +13,7 @@ export const createRestBase = (restBaseOptions: Partial<RestOptionsType> = {}): 
         const customHooks: { [key: string]: () => QueryHookReturnType } = {};
         for (const endpointName in endpoints) {
             const { url, params } = endpoints[endpointName];
-            customHooks[`use${capitalizeFirstLetter(endpointName)}`] = () => useRest(url, params, restBaseOptions);
+            customHooks[`use${capitalizeFirstLetter(endpointName)}`] = () => useRest(url, { ...params, endpointName: endpointName.toLowerCase() }, restBaseOptions);
         }
         return customHooks;
     };

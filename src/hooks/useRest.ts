@@ -16,17 +16,17 @@ function reducer(state: RequestStateType, { type, payload }: {
     payload?: unknown;
 }) {
     switch (type) {
-        case "loading-start":
+        case "loading/start":
             return { ...state, isLoading: true };
-        case "loading-stop":
+        case "loading/stop":
             return { ...state, isLoading: false };
-        case "update-data":
-            return { ...state, data: payload };
-        case "update-error":
-            return { ...state, error: payload };
-        case "reset-data":
+        case "data/success":
+            return { ...state, data: payload, isSuccess: true };
+        case "data/error":
+            return { ...state, error: payload, isSuccess: false };
+        case "data/reset":
             return { ...state, data: undefined };
-        case "reset-error":
+        case "error/reset":
             return { ...state, error: undefined };
         default:
             return "Unrecognized command";
@@ -37,7 +37,8 @@ const defaultOptions: IOptions = {
     preferCachevalue: false,
     updates: [],
     method: 'GET',
-    saveToCache: false
+    saveToCache: false,
+    endpointName: "",
 }
 
 const defaultRestOptions: RestOptionsType = {
@@ -53,35 +54,38 @@ export function useRest(url: string, params: Partial<IOptions> = {}, options: Pa
     // store
     const { save: saveToStore, get: getFromStore, clear: clearFromStore } = useStore();
 
+    console.log("getFromStore => ", getFromStore(`${options.baseUrl || ""}&${params.endpointName}`));
+
     const trigger = async (body: Record<string, string> = {}) => {
         try {
             url = getBaseUrl(url, options?.baseUrl); // redefine url
-            let storeIdentifier = url;
+            let storeIdentifier = `${options.baseUrl || ""}&${params.endpointName}`; // identifier ="http://localhost:334455/getTodo/1-getatodo"
 
-            if (Object(params).hasOwnProperty("preferCachevalue") && params?.preferCachevalue) {
+            if (Object(params).hasOwnProperty("preferCachevalue")) {
                 let cachedResult = getFromStore(storeIdentifier);
+                console.log(cachedResult, "cachedResult");
                 if (cachedResult) {
-                    dispatch({ type: 'update-data', payload: cachedResult })
+                    dispatch({ type: 'data/success', payload: cachedResult })
                     return;
                 }
             }
 
-            dispatch({ type: 'reset-data' });
-            dispatch({ type: 'reset-error' });
-            dispatch({ type: 'loading-start' });
+            dispatch({ type: 'data/reset' });
+            dispatch({ type: 'error/reset' });
+            dispatch({ type: 'loading/start' });
             const response = await makeRequest(concatenateParamsWithUrl(url, body));
-            dispatch({ type: 'update-data', payload: response })
+            dispatch({ type: 'data/success', payload: response })
             if (params?.saveToCache) {
                 saveToStore(url, response, { ...defaultOptions, ...params });
             }
             if (Object(params).hasOwnProperty('updates')) {
-                clearMultipleIds(params.updates, (id: string) => clearFromStore(id));
+                clearMultipleIds(params.updates, options.baseUrl || "", (id: string) => clearFromStore(id));
             }
         }
         catch (error) {
-            dispatch({ type: 'update-error', payload: error })
+            dispatch({ type: 'data/error', payload: error })
         } finally {
-            dispatch({ type: 'loading-stop' })
+            dispatch({ type: 'loading/stop' })
         }
     }
 

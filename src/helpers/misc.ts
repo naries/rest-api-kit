@@ -23,12 +23,13 @@ export const createUniqueId = (url: string, params?: Record<string, string | num
 }
 
 
-export const clearMultipleIds = (arrayOfIds: string[] = [], callback: (id: string) => void) => {
+export const clearMultipleIds = (arrayOfIds: string[] = [], baseUrl: string, callback: (id: string) => void) => {
     if (arrayOfIds.length === 0) {
         return;
     }
-    arrayOfIds.map((cacheId: string) => {
-        callback(cacheId);
+
+    arrayOfIds.map((endpointName: string) => {
+        callback(`${baseUrl}&${endpointName}`);
         return null;
     })
 }
@@ -47,12 +48,12 @@ export const capitalizeFirstLetter = (str: string) => {
 };
 
 
-export const getBaseUrl = (url: string, baseUrl: string | undefined) => {
+export const getBaseUrl = (url: string, baseUrl?: string) => {
     if (!url && !baseUrl) {
         throw new Error("url not constructed properly")
     }
 
-    if (!/^http(s)?:\/\//.test(url)) {
+    if (!/^http(s)?\:\/\//.test(url)) {
         if (baseUrl) {
             // check if url starts with a /
             if (/^\//.test(url)) {
