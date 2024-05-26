@@ -48,7 +48,7 @@ export type RestOptionsType = {
 
 export interface EndpointType {
     url: string;
-    params: { [key: string]: string };
+    params: Partial<IOptions>;
 }
 
 export type BuildFunction = (endpoint: Partial<EndpointType>) => EndpointType;

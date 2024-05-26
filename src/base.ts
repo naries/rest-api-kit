@@ -12,13 +12,9 @@ export const createRestBase = (restBaseOptions: Partial<RestOptionsType> = {}): 
     const createCustomHooks = () => {
         const customHooks: { [key: string]: () => QueryHookReturnType } = {};
         for (const endpointName in endpoints) {
-            const endpointConfig = endpoints[endpointName];
-            customHooks[`use${capitalizeFirstLetter(endpointName)}`] = () => {
-                const { url, params } = endpoints[endpointName];
-                return useRest(url, params);
-            }
+            const { url, params } = endpoints[endpointName];
+            customHooks[`use${capitalizeFirstLetter(endpointName)}`] = () => useRest(url, params, restBaseOptions);
         }
-        console.log(customHooks);
         return customHooks;
     };
 
@@ -45,7 +41,9 @@ export const createRestBase = (restBaseOptions: Partial<RestOptionsType> = {}): 
 //     login: builder({
 //         url: "",
 //         params: {
-//             login: "login",
+//             method: "GET",
+//             preferCachevalue: true,
+//             saveToCache: true,
 //         }
 //     }),
 //     loginPath: builder({

@@ -45,3 +45,25 @@ export const deleteId = (state: StoreStateType, id: string) => {
 export const capitalizeFirstLetter = (str: string) => {
     return str.charAt(0).toUpperCase() + str.slice(1);
 };
+
+
+export const getBaseUrl = (url: string, baseUrl: string | undefined) => {
+    if (!url && !baseUrl) {
+        throw new Error("url not constructed properly")
+    }
+
+    if (!/^http(s)?:\/\//.test(url)) {
+        if (baseUrl) {
+            // check if url starts with a /
+            if (/^\//.test(url)) {
+                return baseUrl + url;
+            } else {
+                return `${baseUrl}/${url}`;
+            }
+        } else {
+            throw new Error("url not constructed properly")
+        }
+    } else {
+        return url;
+    }
+}

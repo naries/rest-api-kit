@@ -1,7 +1,7 @@
 import React, { useReducer } from 'react';
 import { ActionTypes, QueryHookReturnType, RequestStateType, MethodType, RestOptionsType, IOptions, } from '../types';
 import { makeRequest } from '../apifunctions';
-import { clearMultipleIds, concatenateParamsWithUrl, createUniqueId } from '../helpers/misc';
+import { clearMultipleIds, concatenateParamsWithUrl, createUniqueId, getBaseUrl } from '../helpers/misc';
 import { useStore } from './useStore';
 
 const initState: RequestStateType = {
@@ -47,7 +47,7 @@ const defaultRestOptions: RestOptionsType = {
     }
 }
 
-export function useRest(url: string, params: Partial<IOptions> = {}): QueryHookReturnType {
+export function useRest(url: string, params: Partial<IOptions> = {}, options: Partial<RestOptionsType> = {}): QueryHookReturnType {
     const [state, dispatch] = useReducer<(state: RequestStateType, action: { type: ActionTypes, payload?: unknown }) => any>(reducer, initState);
 
     // store
@@ -55,11 +55,10 @@ export function useRest(url: string, params: Partial<IOptions> = {}): QueryHookR
 
     const trigger = async (body: Record<string, string> = {}) => {
         try {
-            // get the store identifier
+            url = getBaseUrl(url, options?.baseUrl); // redefine url
             let storeIdentifier = url;
 
-            // return cached value if it's a get request and user prefers to useCachedValue
-            if (Object(params).hasownProperty("preferCachevalue") && params?.preferCachevalue) {
+            if (Object(params).hasOwnProperty("preferCachevalue") && params?.preferCachevalue) {
                 let cachedResult = getFromStore(storeIdentifier);
                 if (cachedResult) {
                     dispatch({ type: 'update-data', payload: cachedResult })
@@ -75,7 +74,7 @@ export function useRest(url: string, params: Partial<IOptions> = {}): QueryHookR
             if (params?.saveToCache) {
                 saveToStore(url, response, { ...defaultOptions, ...params });
             }
-            if (Object(params).hasownProperty('updates')) {
+            if (Object(params).hasOwnProperty('updates')) {
                 clearMultipleIds(params.updates, (id: string) => clearFromStore(id));
             }
         }
