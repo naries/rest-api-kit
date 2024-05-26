@@ -1,9 +1,9 @@
 import { renderHook, act } from '@testing-library/react-hooks';
-import { useQuery } from '../../hooks/useQuery';
+import { useRest } from '../../hooks/useRest';
 import * as apifunctions from '../../apifunctions'; // Adjust the import path as needed
 import * as helpers from '../../helpers/misc'; // Adjust the import path as needed
 
-describe('useQuery', () => {
+describe('useRest', () => {
     const url = 'https://example.com/api';
     const params = { page: '1', limit: '10' };
     const responseData = { /* mocked response data */ };
@@ -16,7 +16,7 @@ describe('useQuery', () => {
     })
 
     test('should trigger request and update state', async () => {
-        const { result, waitForNextUpdate, rerender } = renderHook(() => useQuery(url, params));
+        const { result, waitForNextUpdate, rerender } = renderHook(() => useRest(url, params));
         const [trigger, state] = result.current;
 
         expect(state.isLoading).toBeFalsy();
