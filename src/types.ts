@@ -34,6 +34,8 @@ export interface IOptions {
     saveToCache: boolean;
     updates: string[],
     endpointName: string;
+    successCondition: (data: unknown) => boolean;
+    transformResponse: (data: unknown) => unknown;
 }
 
 export interface StoreHookReturnType {

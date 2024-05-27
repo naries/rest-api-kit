@@ -35,6 +35,8 @@ function reducer(state: StoreStateType, { type, payload }: {
 export function useStore(): StoreHookReturnType {
     const [state, dispatch] = useReducer<(state: StoreStateType, action: { type: StoreActionType, payload: { id: string, data: unknown, options?: IOptions } }) => any>(reducer, initState);
 
+    console.log("store state => ", state);
+
     return {
         save: (id: string, data: unknown, options: IOptions) => dispatch({
             type: "store/save",

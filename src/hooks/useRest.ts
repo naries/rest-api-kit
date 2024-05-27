@@ -39,6 +39,8 @@ const defaultOptions: IOptions = {
     method: 'GET',
     saveToCache: false,
     endpointName: "",
+    transformResponse: (data) => data,
+    successCondition: (data) => true,
 }
 
 const defaultRestOptions: RestOptionsType = {
@@ -48,24 +50,35 @@ const defaultRestOptions: RestOptionsType = {
     }
 }
 
+const applyChecks = (params: IOptions, dispatch: React.Dispatch<{
+    type: ActionTypes;
+    payload?: unknown;
+}>, response: unknown) => {
+    // check if there is a success condition
+    if (params.successCondition(response)) {
+        dispatch({ type: 'data/error', payload: response })
+    }
+
+    // check if user is transforming the resposne
+    return params.transformResponse(response);
+}
+
 export function useRest(url: string, params: Partial<IOptions> = {}, options: Partial<RestOptionsType> = {}): QueryHookReturnType {
     const [state, dispatch] = useReducer<(state: RequestStateType, action: { type: ActionTypes, payload?: unknown }) => any>(reducer, initState);
 
     // store
     const { save: saveToStore, get: getFromStore, clear: clearFromStore } = useStore();
 
-    console.log("getFromStore => ", getFromStore(`${options.baseUrl || ""}&${params.endpointName}`));
-
     const trigger = async (body: Record<string, string> = {}) => {
         try {
+            const allParams = { ...defaultOptions, params }
             url = getBaseUrl(url, options?.baseUrl); // redefine url
-            let storeIdentifier = `${options.baseUrl || ""}&${params.endpointName}`; // identifier ="http://localhost:334455/getTodo/1-getatodo"
+            let storeIdentifier = `${options.baseUrl || ""}&${params.endpointName}`;
 
             if (Object(params).hasOwnProperty("preferCachevalue")) {
                 let cachedResult = getFromStore(storeIdentifier);
-                console.log(cachedResult, "cachedResult");
                 if (cachedResult) {
-                    dispatch({ type: 'data/success', payload: cachedResult })
+                    applyChecks(allParams, dispatch, cachedResult);
                     return;
                 }
             }
@@ -74,15 +87,16 @@ export function useRest(url: string, params: Partial<IOptions> = {}, options: Pa
             dispatch({ type: 'error/reset' });
             dispatch({ type: 'loading/start' });
             const response = await makeRequest(concatenateParamsWithUrl(url, body));
-            dispatch({ type: 'data/success', payload: response })
+
+            dispatch({ type: 'data/success', payload: applyChecks(allParams, dispatch, response) })
+
             if (params?.saveToCache) {
-                saveToStore(url, response, { ...defaultOptions, ...params });
+                saveToStore(storeIdentifier, response, { ...defaultOptions, ...params });
             }
             if (Object(params).hasOwnProperty('updates')) {
                 clearMultipleIds(params.updates, options.baseUrl || "", (id: string) => clearFromStore(id));
             }
-        }
-        catch (error) {
+        } catch (error) {
             dispatch({ type: 'data/error', payload: error })
         } finally {
             dispatch({ type: 'loading/stop' })
