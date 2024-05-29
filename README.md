@@ -3,16 +3,75 @@ Welcome to `rest-api-kit` – your go-to solution for gaining precise control ov
 
 ## installation
 rest-api-kit is available for use as a package on npm:
-```npm i rest-api-kit```
+```sh
+npm i rest-api-kit
+```
 or yarn:
-```yarn add rest-api-kit```
+```sh
+yarn add rest-api-kit
+```
 
 ## What's in it?
 
 Rest API kit comes with the following hooks:
 `"useRest"`: creates a base for apis. This hook returns a trigger function and a state object. Each works as follows:
 
+## Usage
+### Immport createRestBase
+Import the `createRestBase` from `rest-api-kit` like so:
+```ts
+import { createRestBase } from "./base";
+```
 
-If you use the `saveToCache` option when using a trigger function, then we create a cache entry based entirely on the url passed in from the same trigger. Whether that cache entry is new is dependent on:
-1. If there is a cache with the same url as its key already, we then check if the `preferCacheValue` is set to `true`. If it is, we supply you the value in the cache and not createa new entry
-2. If there is no cache with the same url as its key already, we make the request and create a new cache entry with the url. At this point even if `preferCacheValue` is set to true, it doesn't matter because we are only just creating the cache entry.
+### Assign it
+Assign it to a variable like so:
+```const api = createRestBase({ baseUrl: "https://jsonplaceholder.typicode.com" });```
+
+### Assign it
+assign it to a variable like so:
+```ts
+const api = createRestBase({ baseUrl: "https://jsonplaceholder.typicode.com" });
+```
+
+### Inject the endpoints
+Create the endpoints at the base of your file so it gets loaded in soon as the app launches.
+```ts
+const injector = api.createEndpoints((builder) => ({
+  getATodo: builder({
+    url: "/todos/1",
+    params: {
+      preferCachevalue: false,
+      saveToCache: true,
+      successCondition: (data) => {
+        if (data.completed) {
+          return true;
+        }
+        return false;
+      },
+      transformResponse: (data) => {
+        // always return data;
+        return data;
+      }
+    }
+  }),
+  createTodo: builder({
+    url: "/post",
+    params: {
+      method: 'POST',
+      updates: ['getATodo'],
+    }
+  })
+}));
+```
+### Use it.
+In the components that you need it in, you can use it like so:
+```ts
+const [getATodo, state] = useGetATodo();
+  const { data } = state;
+
+  console.log(state, "<= state");
+
+  useEffect(() => {
+    getATodo();
+  }, [])
+```
