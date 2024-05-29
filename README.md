@@ -25,7 +25,9 @@ import { createRestBase } from "./base";
 
 ### Assign it
 Assign it to a variable like so:
-```const api = createRestBase({ baseUrl: "https://jsonplaceholder.typicode.com" });```
+```ts
+const api = createRestBase({ baseUrl: "https://jsonplaceholder.typicode.com" });
+```
 
 ### Assign it
 assign it to a variable like so:
