@@ -19,9 +19,10 @@ export type RequestStateType = {
     data: unknown;
     error: unknown;
     isSuccess: boolean;
+    extra: unknown;
 }
 
-export type ActionTypes = 'loading/start' | 'loading/stop' | 'data/success' | 'data/error' | 'data/reset' | 'error/reset';
+export type ActionTypes = 'loading/start' | 'loading/stop' | 'data/success' | 'data/error' | 'data/reset' | 'error/reset' | "extra/save";
 
 export type QueryHookReturnType = [(body?: Record<string, string>) => void, state: RequestStateType];
 
@@ -34,7 +35,7 @@ export interface IOptions {
     saveToCache: boolean;
     updates: string[],
     endpointName: string;
-    successCondition: (data: unknown) => boolean;
+    successCondition: (data: any) => boolean;
     transformResponse: (data: unknown) => unknown;
 }
 

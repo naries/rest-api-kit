@@ -1,4 +1,4 @@
-import { StoreStateType } from "../types";
+import { ActionTypes, IOptions, RestOptionsType, StoreStateType } from "../types";
 
 export const concatenateParamsWithUrl = (url: string, params?: Record<string, string | number>) => {
     if (!params || Object.keys(params).length === 0) {
@@ -49,10 +49,19 @@ export const capitalizeFirstLetter = (str: string) => {
 
 
 export const getBaseUrl = (url: string, baseUrl?: string) => {
+    // check if url and baseurl exists
+    // if not throw an error;
     if (!url && !baseUrl) {
         throw new Error("url not constructed properly")
     }
 
+    // check if url has a http or https value. 
+    // In this case ignore baseurl
+    // if not, merge the base url with the url.
+    // further optimization will be to remove extra slashes
+    // in an event where the base urt is provided with an ending
+    // slash and the url is provided with a preceeding slash
+    // or both arent.
     if (!/^http(s)?\:\/\//.test(url)) {
         if (baseUrl) {
             // check if url starts with a /
@@ -67,4 +76,39 @@ export const getBaseUrl = (url: string, baseUrl?: string) => {
     } else {
         return url;
     }
+}
+
+export const applyChecks = (params: IOptions, dispatch: React.Dispatch<{
+    type: ActionTypes;
+    payload?: unknown;
+}>, response: unknown) => {
+    // check if there is a success condition
+    if (!params.successCondition(response)) {
+        dispatch({ type: 'data/error', payload: response })
+    }
+
+    // check if user is transforming the resposne
+    return params.transformResponse(response);
+}
+
+export const load = (dispatch: React.Dispatch<{
+    type: ActionTypes;
+    payload?: unknown;
+}>, url: string, params: Partial<IOptions & RestOptionsType>, body: Record<string, string>) => {
+    // load extras into reducer state
+    // extra contains the url, baseurl, body, 
+    const paramForHere = { ...params };
+    // delete function properties, we don't wnat
+    // having access to functions in a state
+    delete paramForHere.successCondition;
+    delete paramForHere.transformResponse;
+
+    dispatch({
+        type: 'extra/save', payload: {
+            url,
+            body,
+            isFired: true,
+            ...params
+        }
+    })
 }

@@ -1,27 +1,8 @@
 import { useReducer } from "react";
 import { IOptions, StoreActionType, StoreHookReturnType, StoreStateType } from "../types";
 import { deleteId } from "../helpers/misc";
-
-const initState: StoreStateType = {
-    store: {}
-}
-
-function reducer(state: StoreStateType, { type, payload }: {
-    type: StoreActionType;
-    payload: {
-        id: string, data: unknown, options?: IOptions
-    };
-}) {
-    switch (type) {
-        case "store/save":
-            return { ...state, store: { ...state.store, [payload.id]: payload.data } };
-        case "store/clear":
-            let currentState = { ...state }
-            return deleteId(currentState, payload.id);
-        default:
-            return "Unrecognized command";
-    }
-}
+import storeReducer from "../lib/reducers/store";
+import initStoreState from "../lib/states/store";
 
 /**
  * @name useStore
@@ -33,7 +14,7 @@ function reducer(state: StoreStateType, { type, payload }: {
  */
 
 export function useStore(): StoreHookReturnType {
-    const [state, dispatch] = useReducer<(state: StoreStateType, action: { type: StoreActionType, payload: { id: string, data: unknown, options?: IOptions } }) => any>(reducer, initState);
+    const [state, dispatch] = useReducer<(state: StoreStateType, action: { type: StoreActionType, payload: { id: string, data: unknown, options?: IOptions } }) => any>(storeReducer, initStoreState);
 
     console.log("store state => ", state);
 
