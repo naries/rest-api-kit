@@ -3,6 +3,7 @@ import { RequestStateType } from "../../types";
 const initRestState: RequestStateType = {
     isLoading: false,
     data: undefined,
+    response: undefined,
     error: undefined,
     isSuccess: false,
     extra: {

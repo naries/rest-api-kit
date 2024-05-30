@@ -39,24 +39,45 @@ export function useRest(url: string, paramsFromBase: Partial<IOptions> = {}, opt
             load(dispatch, url, params, body);
             let storeIdentifier = `${options.baseUrl || ""}&${params.endpointName}`;
 
+            // if preferCacheValue is set and set to true, we want to prevent
+            // making the actual api request so as to increase speed.
+            // we check first if there is actually a entry in the store in
+            // for that request and if there isn't, we make the request irrespective of
+            // whether or not the preferCacheValue option is set and set to true.
             if (params.preferCachevalue) {
                 let cachedResult = getFromStore(storeIdentifier);
                 if (cachedResult) {
-                    applyChecks(params, dispatch, cachedResult);
-                    return;
+                    const { type: checkType, response: payload } = applyChecks(params, cachedResult);
+                    if (checkType === "error") {
+                        dispatch({
+                            type: 'data/error', payload
+                        })
+                        return;
+                    }
+                    dispatch({
+                        type: 'data/success', payload
+                    })
                 }
             }
-
             dispatch({ type: 'data/reset' });
             dispatch({ type: 'error/reset' });
             dispatch({ type: 'loading/start' });
             const response = await makeRequest(concatenateParamsWithUrl(url, body));
-
-            dispatch({ type: 'data/success', payload: applyChecks(params, dispatch, response) })
-
+            // save response to cache if saveToCache option is set and is set to true;
             if (params?.saveToCache) {
                 saveToStore(storeIdentifier, response, { ...defaultOptions, ...params });
             }
+            // apply checks on response before sending to state
+            const { type: checkType, response: payload } = applyChecks(params, response);
+            if (checkType === "error") {
+                dispatch({
+                    type: 'data/error', payload
+                })
+                return;
+            }
+            dispatch({
+                type: 'data/success', payload
+            })
             if (params.updates.length > 0) {
                 clearMultipleIds(params.updates, options.baseUrl || "", (id: string) => clearFromStore(id));
             }

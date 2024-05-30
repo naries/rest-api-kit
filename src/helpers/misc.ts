@@ -78,17 +78,16 @@ export const getBaseUrl = (url: string, baseUrl?: string) => {
     }
 }
 
-export const applyChecks = (params: IOptions, dispatch: React.Dispatch<{
-    type: ActionTypes;
-    payload?: unknown;
-}>, response: unknown) => {
+export const applyChecks = (params: IOptions, response: unknown) => {
     // check if there is a success condition
     if (!params.successCondition(response)) {
-        dispatch({ type: 'data/error', payload: response })
+        return { type: "error", response };
     }
 
-    // check if user is transforming the resposne
-    return params.transformResponse(response);
+    // check if user is transforming the response
+    return {
+        type: 'success', response: params.transformResponse(response)
+    };
 }
 
 export const load = (dispatch: React.Dispatch<{

@@ -17,6 +17,7 @@ export type FetchApiRequestType = Omit<Partial<RequestType>, "body"> & { body?: 
 export type RequestStateType = {
     isLoading: boolean;
     data: unknown;
+    response: unknown;
     error: unknown;
     isSuccess: boolean;
     extra: unknown;
