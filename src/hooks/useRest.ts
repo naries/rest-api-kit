@@ -8,7 +8,7 @@ import initRestState from '../lib/states/rest';
 
 // default options that useRest takes by default.
 const defaultOptions: IOptions = {
-    preferCachevalue: false,
+    preferCacheValue: false,
     updates: [],
     method: 'GET',
     saveToCache: false,
@@ -44,7 +44,7 @@ export function useRest(url: string, paramsFromBase: Partial<IOptions> = {}, opt
             // we check first if there is actually a entry in the store in
             // for that request and if there isn't, we make the request irrespective of
             // whether or not the preferCacheValue option is set and set to true.
-            if (params.preferCachevalue) {
+            if (params.preferCacheValue) {
                 let cachedResult = getFromStore(storeIdentifier);
                 if (cachedResult) {
                     const { type: checkType, response: payload } = applyChecks(params, cachedResult);
