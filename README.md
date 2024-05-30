@@ -13,8 +13,7 @@ yarn add rest-api-kit
 
 ## What's in it?
 
-Rest API kit comes with the following hooks:
-`"useRest"`: creates a base for apis. This hook returns a trigger function and a state object. Each works as follows:
+Rest API kit comes with a base and hooks. The hooks are created from endpoint objects that are injected with the createEndpoints method as you'll see in the usage section of this documentation.
 
 ## Usage
 ### Immport createRestBase
