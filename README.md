@@ -20,7 +20,7 @@ Rest API kit comes with the following hooks:
 ### Immport createRestBase
 Import the `createRestBase` from `rest-api-kit` like so:
 ```ts
-import { createRestBase } from "./base";
+import { createRestBase } from "rest-api-kit";
 ```
 
 ### Assign it
