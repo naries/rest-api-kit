@@ -35,7 +35,7 @@ const injector = api.createEndpoints((builder) => ({
   getATodo: builder({
     url: "/todos/1",
     params: {
-      preferCachevalue: false,
+      preferCacheValue: false,
       saveToCache: true,
       successCondition: (data) => {
         if (data.completed) {
@@ -55,18 +55,27 @@ const injector = api.createEndpoints((builder) => ({
       method: 'POST',
       updates: ['getATodo'],
     }
-  })
+  }),
 }));
+
+export const { useGetATodo, useCreateTodo, useDeleteTodo } = injector;
 ```
 ### Use it.
 In the components that you need it in, you can use it like so:
 ```ts
-const [getATodo, state] = useGetATodo();
-  const { data } = state;
+const [getATodo, { data }] = useGetATodo();
+const [deleteATodo, state] = useDeleteTodo()
+
 
   console.log(state, "<= state");
 
   useEffect(() => {
     getATodo();
   }, [])
+
+  const deleteTodo = () => {
+    deleteATodo({
+      id: todoId
+    })
+  }
 ```

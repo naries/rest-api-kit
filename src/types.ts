@@ -31,7 +31,7 @@ export type StoreActionType = "store/save" | "store/clear";
 export type StoreStateType = Record<"store", Record<string, { data: unknown }>>;
 
 export interface IOptions {
-    preferCachevalue: boolean; // uses cached value if available,
+    preferCacheValue: boolean; // uses cached value if available,
     method: MethodType;
     saveToCache: boolean;
     updates: string[],

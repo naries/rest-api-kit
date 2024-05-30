@@ -36,7 +36,6 @@ export function makeRequest(payload: string | Partial<RequestType>) {
     }
     if (typeof payload === 'string') {
         return createRequest(payload);
-        return;
     }
     const { url, method, body, headers, ...rest } = payload;
     return createRequest(url, method, body, headers, rest);
