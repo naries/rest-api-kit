@@ -10,13 +10,13 @@ or yarn:
 ```sh
 yarn add rest-api-kit
 ```
-
+  
 ## What's in it?
 
 Rest API kit comes with a base and hooks. The hooks are created from endpoint objects that are injected with the createEndpoints method as you'll see in the usage section of this documentation.
 
 ## Usage
-### Immport createRestBase
+### Import createRestBase
 Import the `createRestBase` from `rest-api-kit` like so:
 ```ts
 import { createRestBase } from "rest-api-kit";
