@@ -1,55 +1,65 @@
 import { capitalizeFirstLetter } from "./helpers/misc";
 import { useRest } from "./hooks"
-import { BuildFunction, EndpointType, QueryHookReturnType, RestBaseReturnType, RestOptionsType } from "./types";
+import { BuildCallBackType, EndpointBuilder, EndpointType, QueryHookReturnType, RestBaseReturnType, RestOptionsType } from "./types";
 
 export const createRestBase = (restBaseOptions: Partial<RestOptionsType> = {}): RestBaseReturnType => {
-    let endpoints: { [key: string]: EndpointType } = {};
+    let endpoints: Record<string, EndpointType<any, any>> = {};
 
-    const build: BuildFunction = (endpoint) => {
-        return endpoint as EndpointType;
-    }
+    const build = <U, V>(endpoint: EndpointType<U, V>): EndpointType<U, V> => {
+        return endpoint;
+    };
 
     const createCustomHooks = () => {
-        const customHooks: { [key: string]: () => QueryHookReturnType } = {};
-        for (const endpointName in endpoints) {
-            const { url, params } = endpoints[endpointName];
-            customHooks[`use${capitalizeFirstLetter(endpointName)}`] = () => useRest(url, { ...params, endpointName: endpointName.toLowerCase() }, restBaseOptions);
+        const customHooks: Record<string, () => QueryHookReturnType> = {};
+
+        for (const [endpointName, { url, params }] of Object.entries(endpoints)) {
+            customHooks[`use${capitalizeFirstLetter(endpointName)}`] = () =>
+                useRest(url, { ...params, endpointName: endpointName.toLowerCase() }, restBaseOptions);
         }
+
         return customHooks;
     };
 
-    const setEndpoints = (x: { [key: string]: EndpointType }) => {
+    const setEndpoints = (x: Record<string, EndpointType<any, any>>) => {
         endpoints = x;
-    }
+    };
 
-    const createEndpoints = (callback: (build: BuildFunction) => { [key: string]: EndpointType }) => {
+    const createEndpoints = (callback: BuildCallBackType) => {
         const builtEndpoints = callback(build);
         setEndpoints(builtEndpoints);
 
         return { ...createCustomHooks() };
-    }
+    };
 
     return {
         createEndpoints,
         endpoints
-    }
-}
+    };
+};
 
-// const api = createRestBase({ baseUrl: "" });
+/*
+const api = createRestBase({ baseUrl: "" });
 
-// const injector = api.createEndpoints((builder) => ({
-//     login: builder({
-//         url: "",
-//         params: {
-//             method: "GET",
-//             preferCachevalue: true,
-//             saveToCache: true,
-//         }
-//     }),
-//     loginPath: builder({
-//         url: "",
-//         params: {
-//             login: "login",
-//         }
-//     }),
-// }));
+const injector = api.createEndpoints((builder) => ({
+    login: builder<{
+        completed: boolean;
+        userId: string;
+        id: number;
+        title: string;
+    }, void>({
+        url: "",
+        params: {
+            method: "GET",
+            preferCachevalue: true,
+            saveToCache: true,
+            transformResponse: (data) => {
+                return data;
+            }
+        }
+    }),
+    loginPath: builder({
+        url: "",
+        params: {}
+    }),
+}));
+*/

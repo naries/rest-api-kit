@@ -30,18 +30,18 @@ export type QueryHookReturnType = [(body?: Record<string, string>) => void, stat
 export type StoreActionType = "store/save" | "store/clear";
 export type StoreStateType = Record<"store", Record<string, { data: unknown }>>;
 
-export interface IOptions {
+export interface IOptions<R, T> {
     preferCacheValue: boolean; // uses cached value if available,
     method: MethodType;
     saveToCache: boolean;
     updates: string[],
     endpointName: string;
-    successCondition: (data: any) => boolean;
-    transformResponse: (data: unknown) => unknown;
+    successCondition: (data: R) => boolean;
+    transformResponse: (data: R, body?: T) => unknown;
 }
 
-export interface StoreHookReturnType {
-    save: (id: string, data: unknown, options: IOptions) => void;
+export interface StoreHookReturnType<R, T> {
+    save: (id: string, data: unknown, options: IOptions<any, any>) => void;
     get: (id: string) => unknown;
     clear: (id: string) => void;
 }
@@ -51,18 +51,18 @@ export type RestOptionsType = {
     headers: Partial<RequestType['headers']>;
 }
 
-export interface EndpointType {
+
+export type EndpointType<R, T> = {
     url: string;
-    params: Partial<IOptions>;
+    params: Partial<IOptions<R, T>>;
 }
 
-export type BuildFunction = (endpoint: Partial<EndpointType>) => EndpointType;
+export type EndpointBuilder = <U, V>(endpoint: EndpointType<U, V>) => EndpointType<U, V>;
 
-export type ExtractEndpointKeys<T> = T extends { [K: string]: () => EndpointType } ? keyof T : never;
-
+export type BuildCallBackType = (builder: EndpointBuilder) => Record<string, EndpointType<any, any>>;
 
 export type RestBaseReturnType = {
-    createEndpoints: (callback: (build: BuildFunction) => { [key: string]: EndpointType }) => { [key: string]: () => QueryHookReturnType };
-    endpoints: { [key: string]: EndpointType }
+    createEndpoints: (callback: BuildCallBackType) => Record<string, () => QueryHookReturnType>;
+    endpoints: any;
 }
 
