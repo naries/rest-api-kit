@@ -1,6 +1,6 @@
 import { capitalizeFirstLetter } from "./helpers/misc";
 import { useRest } from "./hooks"
-import { BuildCallBackType, EndpointBuilder, EndpointType, QueryHookReturnType, RestBaseReturnType, RestOptionsType } from "./types";
+import { BuildCallBackType, EndpointType, QueryHookReturnType, RestBaseReturnType, RestOptionsType } from "./types";
 
 export const createRestBase = (restBaseOptions: Partial<RestOptionsType> = {}): RestBaseReturnType => {
     let endpoints: Record<string, EndpointType<any, any>> = {};
