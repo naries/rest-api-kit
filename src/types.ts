@@ -30,7 +30,7 @@ export type QueryHookReturnType = [(body?: Record<string, string>) => void, stat
 export type StoreActionType = "store/save" | "store/clear";
 export type StoreStateType = Record<"store", Record<string, { data: unknown }>>;
 
-export interface IOptions<R, T> {
+export interface IOptions<R = any, T = any> {
     preferCacheValue: boolean; // uses cached value if available,
     method: MethodType;
     saveToCache: boolean;
@@ -40,7 +40,7 @@ export interface IOptions<R, T> {
     transformResponse: (data: R, body?: T) => unknown;
 }
 
-export interface StoreHookReturnType<R, T> {
+export interface StoreHookReturnType {
     save: (id: string, data: unknown, options: IOptions<any, any>) => void;
     get: (id: string) => unknown;
     clear: (id: string) => void;

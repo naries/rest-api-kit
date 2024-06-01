@@ -13,13 +13,13 @@ import initStoreState from "../lib/states/store";
  * @returns { clear }: A function that clears data from the store based on the provided id. Takes one parameter: id (string)
  */
 
-export function useStore(): StoreHookReturnType {
-    const [state, dispatch] = useReducer<(state: StoreStateType, action: { type: StoreActionType, payload: { id: string, data: unknown, options?: IOptions } }) => any>(storeReducer, initStoreState);
+export function useStore<R = any, T = any>(): StoreHookReturnType {
+    const [state, dispatch] = useReducer<(state: StoreStateType, action: { type: StoreActionType, payload: { id: string, data: unknown, options?: IOptions<R, T> } }) => any>(storeReducer, initStoreState);
 
     console.log("store state => ", state);
 
     return {
-        save: (id: string, data: unknown, options: IOptions) => dispatch({
+        save: (id: string, data: unknown, options: IOptions<R, T>) => dispatch({
             type: "store/save",
             payload: { id, data, options }
         }),

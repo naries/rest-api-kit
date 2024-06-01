@@ -7,7 +7,7 @@ import restReducer from '../lib/reducers/rest';
 import initRestState from '../lib/states/rest';
 
 // default options that useRest takes by default.
-const defaultOptions: IOptions = {
+const defaultOptions: IOptions<any, any> = {
     preferCacheValue: false,
     updates: [],
     method: 'GET',
@@ -26,11 +26,11 @@ const defaultOptions: IOptions = {
  * @returns { state }: An object that includes the state of the api request.
  */
 
-export function useRest(url: string, paramsFromBase: Partial<IOptions> = {}, options: Partial<RestOptionsType> = {}): QueryHookReturnType {
+export function useRest<R = any, T = any>(url: string, paramsFromBase: Partial<IOptions<any, any>> = {}, options: Partial<RestOptionsType> = {}): QueryHookReturnType {
     const [state, dispatch] = useReducer<(state: RequestStateType, action: { type: ActionTypes, payload?: unknown }) => any>(restReducer, initRestState);
 
     // store
-    const { save: saveToStore, get: getFromStore, clear: clearFromStore } = useStore();
+    const { save: saveToStore, get: getFromStore, clear: clearFromStore } = useStore<R, T>();
 
     const trigger = async (body: Record<string, string> = {}) => {
         try {
