@@ -6,17 +6,6 @@ import { useStore } from './useStore';
 import restReducer from '../lib/reducers/rest';
 import initRestState from '../lib/states/rest';
 
-// default options that useRest takes by default.
-const defaultOptions: IOptions<any, any> = {
-    preferCacheValue: false,
-    updates: [],
-    method: 'GET',
-    saveToCache: false,
-    endpointName: "",
-    transformResponse: (data) => data,
-    successCondition: (data) => true,
-}
-
 /**
  * @name useRest
  * @description A hook that takes charge of making requests, saving the state where necessary.
@@ -26,7 +15,7 @@ const defaultOptions: IOptions<any, any> = {
  * @returns { state }: An object that includes the state of the api request.
  */
 
-export function useRest<R = any, T = any>(url: string, paramsFromBase: Partial<IOptions<any, any>> = {}, options: Partial<RestOptionsType> = {}): QueryHookReturnType {
+export function useRest<R = any, T = any>(url: string, paramsFromBase: IOptions<any, any>, options: Partial<RestOptionsType> = {}): QueryHookReturnType {
     const [state, dispatch] = useReducer<(state: RequestStateType, action: { type: ActionTypes, payload?: unknown }) => any>(restReducer, initRestState);
 
     // store
@@ -34,7 +23,7 @@ export function useRest<R = any, T = any>(url: string, paramsFromBase: Partial<I
 
     const trigger = async (body: Record<string, string> = {}) => {
         try {
-            const params = { ...defaultOptions, ...paramsFromBase }
+            const params = { ...paramsFromBase }
             url = getBaseUrl(url, options?.baseUrl); // redefine url
             load(dispatch, url, params, body);
             let storeIdentifier = `${options.baseUrl || ""}&${params.endpointName}`;
@@ -64,8 +53,8 @@ export function useRest<R = any, T = any>(url: string, paramsFromBase: Partial<I
             dispatch({ type: 'loading/start' });
             const response = await makeRequest(concatenateParamsWithUrl(url, body));
             // save response to cache if saveToCache option is set and is set to true;
-            if (params?.saveToCache) {
-                saveToStore(storeIdentifier, response, { ...defaultOptions, ...params });
+            if (params.saveToCache) {
+                saveToStore(storeIdentifier, response, { ...params });
             }
             // apply checks on response before sending to state
             const { type: checkType, response: payload } = applyChecks(params, response);

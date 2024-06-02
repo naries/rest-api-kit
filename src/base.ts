@@ -1,18 +1,31 @@
 import { capitalizeFirstLetter } from "./helpers/misc";
 import { useRest } from "./hooks"
-import { BuildCallBackType, EndpointBuilder, EndpointFix, EndpointType, QueryHookReturnType, RestBaseReturnType, RestOptionsType } from "./types";
+import { CompleteEndpointFix, CompleteEndpointType, EndpointBuilder, EndpointFix, EndpointType, IOptions, QueryHookReturnType, RestBaseReturnType, RestOptionsType } from "./types";
+
+
+// default options that useRest takes by default.
+export const defaultOptions: IOptions<any, any> = {
+    preferCacheValue: false,
+    updates: [],
+    method: 'GET',
+    saveToCache: false,
+    endpointName: "",
+    transformResponse: (data) => data,
+    successCondition: () => true,
+}
+
 
 export const createRestBase = (restBaseOptions: Partial<RestOptionsType> = {}): RestBaseReturnType => {
-    let endpoints: { [x: string]: EndpointType<any, any> } = {};
+    let endpoints: { [x: string]: CompleteEndpointType<any, any> } = {};
 
-    function build<U, V>(endpoint: EndpointType<U, V>): EndpointType<U, V> {
+    function build<U, V>(endpoint: EndpointType<U, V>): CompleteEndpointType<U, V> {
         // here's where we can specify other parameters that we need to specify for an endpoint
         // more like an engine set to work on the endpoint and returns an object
-
-        return endpoint;
+        const params: IOptions<U, V> = { ...defaultOptions, ...endpoint.params }
+        return { ...endpoint, params };
     };
 
-    function createCustomHooks<T extends EndpointFix>(endpoints: T): Record<`use${string & Capitalize<keyof T extends string ? keyof T : never>}`, () => QueryHookReturnType> {
+    function createCustomHooks<T extends CompleteEndpointFix>(endpoints: T): Record<`use${string & Capitalize<keyof T extends string ? keyof T : never>}`, () => QueryHookReturnType> {
         const customHooks: Record<string, () => QueryHookReturnType> = {};
 
         for (const [endpointName, { url, params }] of Object.entries(endpoints)) {
@@ -23,11 +36,11 @@ export const createRestBase = (restBaseOptions: Partial<RestOptionsType> = {}): 
         return customHooks;
     };
 
-    const setEndpoints = (x: Record<string, EndpointType<any, any>>) => {
+    const setEndpoints = (x: Record<string, CompleteEndpointType<any, any>>) => {
         endpoints = x;
     };
 
-    const createEndpoints = <T extends EndpointFix>(callback: (builder: EndpointBuilder) => T): Record<`use${string & Capitalize<keyof T extends string ? keyof T : never>}`, () => QueryHookReturnType> => {
+    const createEndpoints = <T extends CompleteEndpointFix>(callback: (builder: EndpointBuilder) => T): Record<`use${string & Capitalize<keyof T extends string ? keyof T : never>}`, () => QueryHookReturnType> => {
         const builtEndpoints = callback(build); // to use callback, it takes a function build
         setEndpoints(builtEndpoints);
 
@@ -40,7 +53,6 @@ export const createRestBase = (restBaseOptions: Partial<RestOptionsType> = {}): 
     };
 };
 
-/*
 const api = createRestBase({ baseUrl: "" });
 
 
@@ -72,4 +84,3 @@ const injector = api.createEndpoints(
 );
 
 const { useLogin, useLoginPath } = injector
-*/

@@ -57,14 +57,20 @@ export type EndpointType<R, T> = {
     params: Partial<IOptions<R, T>>;
 }
 
-export type EndpointFix = Record<string, EndpointType<any, any>>;
+export type CompleteEndpointType<R, T> = {
+    url: string;
+    params: IOptions<R, T>;
+}
 
-export type EndpointBuilder = <U, V>(endpoint: EndpointType<U, V>) => EndpointType<U, V>;
+export type EndpointFix = Record<string, EndpointType<any, any>>;
+export type CompleteEndpointFix = Record<string, CompleteEndpointType<any, any>>;
+
+export type EndpointBuilder = <U, V>(endpoint: EndpointType<U, V>) => CompleteEndpointType<U, V>;
 
 export type BuildCallBackType = (builder: EndpointBuilder) => Record<string, EndpointType<any, any>>;
 
 export type RestBaseReturnType = {
-    createEndpoints: <T extends EndpointFix>(callback: (builder: EndpointBuilder) => T) => Record<`use${string & Capitalize<keyof T extends string ? keyof T : never>}`, () => QueryHookReturnType>;
+    createEndpoints: <T extends CompleteEndpointFix>(callback: (builder: EndpointBuilder) => T) => Record<`use${string & Capitalize<keyof T extends string ? keyof T : never>}`, () => QueryHookReturnType>;
     endpoints: EndpointFix;
 }
 

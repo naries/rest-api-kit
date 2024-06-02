@@ -18,7 +18,7 @@ function restReducer(state: RequestStateType, { type, payload }: {
         case "error/reset":
             return { ...state, error: undefined };
         case 'extra/save':
-            return { ...state, extra: undefined };
+            return { ...state, extra: payload };
         default:
             return "Unrecognized command";
     }
