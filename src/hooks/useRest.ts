@@ -58,15 +58,24 @@ export function useRest<R = any, T = any>(url: string, paramsFromBase: IOptions<
             }
             // apply checks on response before sending to state
             const { type: checkType, response: payload } = applyChecks(params, response);
+            // if error, send error to state
             if (checkType === "error") {
                 dispatch({
                     type: 'data/error', payload
                 })
                 return;
             }
+            //send the response into the state as response
+            dispatch({
+                type: 'response/save', payload: response
+            })
+
+            // send the success to the state
             dispatch({
                 type: 'data/success', payload
             })
+
+
             if (params.updates.length > 0) {
                 clearMultipleIds(params.updates, options.baseUrl || "", (id: string) => clearFromStore(id));
             }
