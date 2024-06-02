@@ -23,7 +23,7 @@ export type RequestStateType = {
     extra: unknown;
 }
 
-export type ActionTypes = 'loading/start' | 'loading/stop' | 'data/success' | 'data/error' | 'data/reset' | 'error/reset' | "extra/save" | "response/save";
+export type ActionTypes = 'loading/start' | 'loading/stop' | 'data/success' | 'data/error' | 'data/reset' | 'error/reset' | "extra/save" | "response/save" | 'response/reset';
 
 export type QueryHookReturnType = [(body?: Record<string, string>) => void, state: RequestStateType];
 

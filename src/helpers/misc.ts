@@ -110,11 +110,14 @@ export const load = (dispatch: React.Dispatch<{
             ...params
         }
     })
-    // reset the data and the error
+    // reset the data, error and response
     dispatch({
         type: 'data/reset'
     })
     dispatch({
         type: 'error/reset'
+    })
+    dispatch({
+        type: 'response/reset'
     })
 }
