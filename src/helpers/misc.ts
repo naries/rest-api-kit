@@ -1,14 +1,17 @@
 import { ActionTypes, IOptions, RestOptionsType, StoreStateType } from "../types";
 
-export const concatenateParamsWithUrl = (url: string, params?: Record<string, string | number>) => {
-    if (!params || Object.keys(params).length === 0) {
+export const concatenateParamsWithUrl = (url: string, body?: string | Record<string, string | number>) => {
+    if (!body) {
         return url;
     }
-    const queryString = Object.entries(params)
+    if (typeof body === 'string') {
+        return `${url}${body}`
+    }
+    const queryString = Object.entries(body)
         .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
         .join('&');
 
-    return `${url}?${queryString}`;
+    return `${url}?${queryString}`
 }
 
 export const createUniqueId = (url: string, params?: Record<string, string | number>) => {
@@ -93,7 +96,7 @@ export const applyChecks = (params: IOptions, response: unknown) => {
 export const load = (dispatch: React.Dispatch<{
     type: ActionTypes;
     payload?: unknown;
-}>, url: string, params: Partial<IOptions & RestOptionsType>, body: Record<string, string>) => {
+}>, url: string, params: Partial<IOptions & RestOptionsType>, body: string | Record<string, string>) => {
     // load extras into reducer state
     // extra contains the url, baseurl, body, 
     const paramForHere = { ...params };

@@ -10,7 +10,7 @@ export type RequestType = {
     redirect: "manual" | "follow" | "error",
     referrerPolicy: "no-referrer" | "no-referrer-when-downgrade" | "origin";
     body: Record<string, unknown>;
-    headers: Record<"Content-Type", string>;
+    headers: HeadersInit;
 }
 
 export type FetchApiRequestType = Omit<Partial<RequestType>, "body"> & { body?: string };
@@ -38,6 +38,7 @@ export interface IOptions<R = any, T = any> {
     endpointName: string;
     successCondition: (data: R) => boolean;
     transformResponse: (data: R, body?: T) => unknown;
+    headers:HeadersInit;
 }
 
 export interface StoreHookReturnType<R, T> {

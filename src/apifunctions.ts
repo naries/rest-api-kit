@@ -1,10 +1,10 @@
 import { FetchApiRequestType, MethodType, RequestType } from "./types";
 
 export async function createRequest(
-    url = "", 
+    url = "",
     method?: MethodType,
     body = {},
-    headers = { "Content-Type": "application/json" },
+    headers = {},
     rest?: Partial<Omit<RequestType, "headers" | "url" | "method" | "body">>) {
     try {
         let params: Partial<FetchApiRequestType> = {

@@ -21,11 +21,12 @@ export function useRest<R = any, T = any>(url: string, paramsFromBase: IOptions<
     // store
     const { save: saveToStore, get: getFromStore, clear: clearFromStore } = useStore<R, T>();
 
-    const trigger = async (body: Record<string, string> = {}) => {
+    const trigger = async (body: string | Record<string, string> = {}) => {
         try {
             const params = { ...paramsFromBase }
             url = getBaseUrl(url, options?.baseUrl); // redefine url
-            load(dispatch, url, params, body);
+            const formattedUrl = params.method === "GET" ? concatenateParamsWithUrl(url, body) : url;
+            load(dispatch, formattedUrl, params, body);
             let storeIdentifier = `${options.baseUrl || ""}&${params.endpointName}`;
 
             // if preferCacheValue is set and set to true, we want to prevent
@@ -51,7 +52,7 @@ export function useRest<R = any, T = any>(url: string, paramsFromBase: IOptions<
             dispatch({ type: 'data/reset' });
             dispatch({ type: 'error/reset' });
             dispatch({ type: 'loading/start' });
-            const response = await makeRequest(concatenateParamsWithUrl(url, body));
+            const response = await makeRequest(params.method === "GET" ? formattedUrl : { url: formattedUrl, body: body as Record<string, unknown>, headers: params.headers });
             // save response to cache if saveToCache option is set and is set to true;
             if (params.saveToCache) {
                 saveToStore(storeIdentifier, response, { ...params });
