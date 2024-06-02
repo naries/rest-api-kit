@@ -1,10 +1,24 @@
-import React, { useReducer } from 'react';
-import { ActionTypes, QueryHookReturnType, RequestStateType, MethodType, RestOptionsType, IOptions, } from '../types';
-import { makeRequest } from '../apifunctions';
-import { applyChecks, clearMultipleIds, concatenateParamsWithUrl, createUniqueId, getBaseUrl, load } from '../helpers/misc';
-import { useStore } from './useStore';
-import restReducer from '../lib/reducers/rest';
-import initRestState from '../lib/states/rest';
+import React, { useReducer } from "react";
+import {
+  ActionTypes,
+  QueryHookReturnType,
+  RequestStateType,
+  MethodType,
+  RestOptionsType,
+  IOptions,
+} from "../types";
+import { makeRequest } from "../apifunctions";
+import {
+  applyChecks,
+  clearMultipleIds,
+  concatenateParamsWithUrl,
+  createUniqueId,
+  getBaseUrl,
+  load,
+} from "../helpers/misc";
+import { useStore } from "./useStore";
+import restReducer from "../lib/reducers/rest";
+import initRestState from "../lib/states/rest";
 
 /**
  * @name useRest
@@ -15,77 +29,111 @@ import initRestState from '../lib/states/rest';
  * @returns { state }: An object that includes the state of the api request.
  */
 
-export function useRest<R = any, T = any>(url: string, paramsFromBase: IOptions<any, any>, options: Partial<RestOptionsType> = {}): QueryHookReturnType {
-    const [state, dispatch] = useReducer<(state: RequestStateType, action: { type: ActionTypes, payload?: unknown }) => any>(restReducer, initRestState);
+export function useRest<R = any, T = any>(
+  url: string,
+  paramsFromBase: IOptions<any, any>,
+  options: Partial<RestOptionsType> = {}
+): QueryHookReturnType {
+  const [state, dispatch] = useReducer<
+    (
+      state: RequestStateType,
+      action: { type: ActionTypes; payload?: unknown }
+    ) => any
+  >(restReducer, initRestState);
 
-    // store
-    const { save: saveToStore, get: getFromStore, clear: clearFromStore } = useStore<R, T>();
+  // store
+  const {
+    save: saveToStore,
+    get: getFromStore,
+    clear: clearFromStore,
+  } = useStore<R, T>();
 
-    const trigger = async (body: string | Record<string, string> = {}) => {
-        try {
-            const params = { ...paramsFromBase }
-            url = getBaseUrl(url, options?.baseUrl); // redefine url
-            const formattedUrl = params.method === "GET" ? concatenateParamsWithUrl(url, body) : url;
-            load(dispatch, formattedUrl, params, body);
-            let storeIdentifier = `${options.baseUrl || ""}&${params.endpointName}`;
+  const trigger = async (body: string | Record<string, string> = {}) => {
+    try {
+      const params = { ...paramsFromBase };
+      url = getBaseUrl(url, options?.baseUrl); // redefine url
+      const formattedUrl =
+        params.method === "GET" ? concatenateParamsWithUrl(url, body) : url;
+      load(dispatch, formattedUrl, params, body);
+      let storeIdentifier = `${options.baseUrl || ""}&${params.endpointName}`;
 
-            // if preferCacheValue is set and set to true, we want to prevent
-            // making the actual api request so as to increase speed.
-            // we check first if there is actually a entry in the store in
-            // for that request and if there isn't, we make the request irrespective of
-            // whether or not the preferCacheValue option is set and set to true.
-            if (params.preferCacheValue) {
-                let cachedResult = getFromStore(storeIdentifier);
-                if (cachedResult) {
-                    const { type: checkType, response: payload } = applyChecks(params, cachedResult);
-                    if (checkType === "error") {
-                        dispatch({
-                            type: 'data/error', payload
-                        })
-                        return;
-                    }
-                    dispatch({
-                        type: 'data/success', payload
-                    })
-                }
-            }
-            dispatch({ type: 'data/reset' });
-            dispatch({ type: 'error/reset' });
-            dispatch({ type: 'loading/start' });
-            const response = await makeRequest(params.method === "GET" ? formattedUrl : { url: formattedUrl, body: body as Record<string, unknown>, headers: params.headers });
-            // save response to cache if saveToCache option is set and is set to true;
-            if (params.saveToCache) {
-                saveToStore(storeIdentifier, response, { ...params });
-            }
-            // apply checks on response before sending to state
-            const { type: checkType, response: payload } = applyChecks(params, response);
-            // if error, send error to state
-            if (checkType === "error") {
-                dispatch({
-                    type: 'data/error', payload
-                })
-                return;
-            }
-            //send the response into the state as response
+      // if preferCacheValue is set and set to true, we want to prevent
+      // making the actual api request so as to increase speed.
+      // we check first if there is actually a entry in the store in
+      // for that request and if there isn't, we make the request irrespective of
+      // whether or not the preferCacheValue option is set and set to true.
+      if (params.preferCacheValue) {
+        let cachedResult = getFromStore(storeIdentifier);
+        if (cachedResult) {
+          const { type: checkType, response: payload } = applyChecks(
+            params,
+            cachedResult
+          );
+          if (checkType === "error") {
             dispatch({
-                type: 'response/save', payload: response
-            })
-
-            // send the success to the state
-            dispatch({
-                type: 'data/success', payload
-            })
-
-
-            if (params.updates.length > 0) {
-                clearMultipleIds(params.updates, options.baseUrl || "", (id: string) => clearFromStore(id));
-            }
-        } catch (error) {
-            dispatch({ type: 'data/error', payload: error })
-        } finally {
-            dispatch({ type: 'loading/stop' })
+              type: "data/error",
+              payload,
+            });
+            return;
+          }
+          dispatch({
+            type: "data/success",
+            payload,
+          });
         }
-    }
+      }
+      dispatch({ type: "data/reset" });
+      dispatch({ type: "error/reset" });
+      dispatch({ type: "loading/start" });
+      const response = await makeRequest(
+        params.method === "GET"
+          ? formattedUrl
+          : {
+              url: formattedUrl,
+              body: body as Record<string, unknown>,
+              headers: params.headers,
+            }
+      );
+      // save response to cache if saveToCache option is set and is set to true;
+      if (params.saveToCache) {
+        saveToStore(storeIdentifier, response, { ...params });
+      }
+      // apply checks on response before sending to state
+      const { type: checkType, response: payload } = applyChecks(
+        params,
+        response
+      );
+      // if error, send error to state
+      if (checkType === "error") {
+        dispatch({
+          type: "data/error",
+          payload,
+        });
+        return;
+      }
+      //send the response into the state as response
+      dispatch({
+        type: "response/save",
+        payload: response,
+      });
 
-    return [trigger, state];
+      // send the success to the state
+      dispatch({
+        type: "data/success",
+        payload,
+      });
+
+      if (params.updates.length > 0) {
+        clearMultipleIds(params.updates, options.baseUrl || "", (id: string) =>
+          clearFromStore(id)
+        );
+      }
+    } catch (error) {
+      dispatch({ type: "data/error", payload: error });
+    } finally {
+      dispatch({ type: "loading/stop" });
+    }
+  };
+
+  return [trigger, state];
 }

@@ -1,5 +1,10 @@
 import { useReducer } from "react";
-import { IOptions, StoreActionType, StoreHookReturnType, StoreStateType } from "../types";
+import {
+  IOptions,
+  StoreActionType,
+  StoreHookReturnType,
+  StoreStateType,
+} from "../types";
 import { deleteId } from "../helpers/misc";
 import storeReducer from "../lib/reducers/store";
 import initStoreState from "../lib/states/store";
@@ -14,21 +19,31 @@ import initStoreState from "../lib/states/store";
  */
 
 export function useStore<R = any, T = any>(): StoreHookReturnType<R, T> {
-    const [state, dispatch] = useReducer<(state: StoreStateType, action: { type: StoreActionType, payload: { id: string, data: unknown, options?: IOptions<R, T> } }) => any>(storeReducer, initStoreState);
+  const [state, dispatch] = useReducer<
+    (
+      state: StoreStateType,
+      action: {
+        type: StoreActionType;
+        payload: { id: string; data: unknown; options?: IOptions<R, T> };
+      }
+    ) => any
+  >(storeReducer, initStoreState);
 
-    console.log("store state => ", state);
+  console.log("store state => ", state);
 
-    return {
-        save: (id: string, data: unknown, options: IOptions<R, T>) => dispatch({
-            type: "store/save",
-            payload: { id, data, options }
-        }),
-        get: (id: string) => {
-            return state.store[id]?.result;
-        },
-        clear: (id: string) => dispatch({
-            type: "store/clear",
-            payload: { id, data: null }
-        })
-    }
+  return {
+    save: (id: string, data: unknown, options: IOptions<R, T>) =>
+      dispatch({
+        type: "store/save",
+        payload: { id, data, options },
+      }),
+    get: (id: string) => {
+      return state.store[id]?.result;
+    },
+    clear: (id: string) =>
+      dispatch({
+        type: "store/clear",
+        payload: { id, data: null },
+      }),
+  };
 }
