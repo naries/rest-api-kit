@@ -1,15 +1,18 @@
 import { capitalizeFirstLetter } from "./helpers/misc";
 import { useRest } from "./hooks"
-import { BuildCallBackType, EndpointType, QueryHookReturnType, RestBaseReturnType, RestOptionsType } from "./types";
+import { BuildCallBackType, EndpointBuilder, EndpointFix, EndpointType, QueryHookReturnType, RestBaseReturnType, RestOptionsType } from "./types";
 
 export const createRestBase = (restBaseOptions: Partial<RestOptionsType> = {}): RestBaseReturnType => {
-    let endpoints: Record<string, EndpointType<any, any>> = {};
+    let endpoints: { [x: string]: EndpointType<any, any> } = {};
 
-    const build = <U, V>(endpoint: EndpointType<U, V>): EndpointType<U, V> => {
+    function build<U, V>(endpoint: EndpointType<U, V>): EndpointType<U, V> {
+        // here's where we can specify other parameters that we need to specify for an endpoint
+        // more like an engine set to work on the endpoint and returns an object
+
         return endpoint;
     };
 
-    const createCustomHooks = () => {
+    function createCustomHooks<T extends EndpointFix>(endpoints: T): Record<`use${string & Capitalize<keyof T extends string ? keyof T : never>}`, () => QueryHookReturnType> {
         const customHooks: Record<string, () => QueryHookReturnType> = {};
 
         for (const [endpointName, { url, params }] of Object.entries(endpoints)) {
@@ -24,11 +27,11 @@ export const createRestBase = (restBaseOptions: Partial<RestOptionsType> = {}): 
         endpoints = x;
     };
 
-    const createEndpoints = (callback: BuildCallBackType) => {
-        const builtEndpoints = callback(build);
+    const createEndpoints = <T extends EndpointFix>(callback: (builder: EndpointBuilder) => T): Record<`use${string & Capitalize<keyof T extends string ? keyof T : never>}`, () => QueryHookReturnType> => {
+        const builtEndpoints = callback(build); // to use callback, it takes a function build
         setEndpoints(builtEndpoints);
 
-        return { ...createCustomHooks() };
+        return { ...createCustomHooks(builtEndpoints) };
     };
 
     return {
@@ -40,26 +43,33 @@ export const createRestBase = (restBaseOptions: Partial<RestOptionsType> = {}): 
 /*
 const api = createRestBase({ baseUrl: "" });
 
-const injector = api.createEndpoints((builder) => ({
-    login: builder<{
-        completed: boolean;
-        userId: string;
-        id: number;
-        title: string;
-    }, void>({
-        url: "",
-        params: {
-            method: "GET",
-            preferCachevalue: true,
-            saveToCache: true,
-            transformResponse: (data) => {
-                return data;
-            }
+
+const injector = api.createEndpoints(
+    function (builder) {
+        return {
+            login: builder<{
+                completed: boolean;
+                userId: string;
+                id: number;
+                title: string;
+            }, void>({
+                url: "",
+                params: {
+                    method: "GET",
+                    preferCacheValue: true,
+                    saveToCache: true,
+                    transformResponse: (data) => {
+                        return data;
+                    }
+                }
+            }),
+            loginPath: builder({
+                url: "",
+                params: {}
+            }),
         }
-    }),
-    loginPath: builder({
-        url: "",
-        params: {}
-    }),
-}));
+    } // this is the callback which takes the build arguement
+);
+
+const { useLogin, useLoginPath } = injector
 */

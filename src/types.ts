@@ -40,7 +40,7 @@ export interface IOptions<R = any, T = any> {
     transformResponse: (data: R, body?: T) => unknown;
 }
 
-export interface StoreHookReturnType {
+export interface StoreHookReturnType<R, T> {
     save: (id: string, data: unknown, options: IOptions<any, any>) => void;
     get: (id: string) => unknown;
     clear: (id: string) => void;
@@ -57,12 +57,14 @@ export type EndpointType<R, T> = {
     params: Partial<IOptions<R, T>>;
 }
 
+export type EndpointFix = Record<string, EndpointType<any, any>>;
+
 export type EndpointBuilder = <U, V>(endpoint: EndpointType<U, V>) => EndpointType<U, V>;
 
 export type BuildCallBackType = (builder: EndpointBuilder) => Record<string, EndpointType<any, any>>;
 
 export type RestBaseReturnType = {
-    createEndpoints: (callback: BuildCallBackType) => Record<string, () => QueryHookReturnType>;
-    endpoints: any;
+    createEndpoints: <T extends EndpointFix>(callback: (builder: EndpointBuilder) => T) => Record<`use${string & Capitalize<keyof T extends string ? keyof T : never>}`, () => QueryHookReturnType>;
+    endpoints: EndpointFix;
 }
 
