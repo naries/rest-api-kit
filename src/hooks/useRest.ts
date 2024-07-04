@@ -16,9 +16,10 @@ import {
   getBaseUrl,
   load,
 } from "../helpers/misc";
-import { useStore } from "./useStore";
+
 import restReducer from "../lib/reducers/rest";
 import initRestState from "../lib/states/rest";
+import { useStore } from "./storeListener";
 
 /**
  * @name useRest
@@ -27,6 +28,8 @@ import initRestState from "../lib/states/rest";
  * @returns An array containing a trigger functions which takes an argument of an object which serves as a body to the api request and a state object.
  * @returns { trigger }: A function that saves data to the store. Takes two parameters: id (string) and data (unknown). Returns void.
  * @returns { state }: An object that includes the state of the api request.
+ *
+ * @format
  */
 
 export function useRest<R = any, T = any>(
@@ -52,16 +55,19 @@ export function useRest<R = any, T = any>(
     try {
       const params = { ...paramsFromBase };
       url = getBaseUrl(url, options?.baseUrl); // redefine url
+
       const formattedUrl =
-        params.method === "GET" ? concatenateParamsWithUrl(url, body) : url;
+        params.method === "GET"
+          ? concatenateParamsWithUrl(url, body.toString())
+          : url;
+
       load(dispatch, formattedUrl, params, body);
       let storeIdentifier = `${options.baseUrl || ""}&${params.endpointName}`;
 
-      // if preferCacheValue is set and set to true, we want to prevent
-      // making the actual api request so as to increase speed.
-      // we check first if there is actually a entry in the store in
-      // for that request and if there isn't, we make the request irrespective of
-      // whether or not the preferCacheValue option is set and set to true.
+      // Check if preferCacheValue is set to true,
+      // prevent making the actual api request.
+      // Check for entry in store for that request
+      // Make the request if there's none.
       if (params.preferCacheValue) {
         let cachedResult = getFromStore(storeIdentifier);
         if (cachedResult) {
@@ -82,27 +88,43 @@ export function useRest<R = any, T = any>(
           });
         }
       }
+
+      // prepare
       dispatch({ type: "data/reset" });
       dispatch({ type: "error/reset" });
       dispatch({ type: "loading/start" });
+
+      // configure headers
+      let headers = new Headers({ ...paramsFromBase?.headers });
+      if (options?.prepareHeaders) {
+        headers = options?.prepareHeaders(headers);
+      }
+
+      console.log("headers -> ", headers);
+
+      // make the request
       const response = await makeRequest(
         params.method === "GET"
           ? formattedUrl
           : {
               url: formattedUrl,
               body: body as Record<string, unknown>,
-              headers: params.headers,
+              headers,
             }
       );
-      // save response to cache if saveToCache option is set and is set to true;
+
+      // if saveToCache option is set to true
+      // save response to cache
       if (params.saveToCache) {
         saveToStore(storeIdentifier, response, { ...params });
       }
-      // apply checks on response before sending to state
+
+      // apply checks on response
       const { type: checkType, response: payload } = applyChecks(
         params,
         response
       );
+
       // if error, send error to state
       if (checkType === "error") {
         dispatch({
@@ -111,13 +133,14 @@ export function useRest<R = any, T = any>(
         });
         return;
       }
-      //send the response into the state as response
+
+      // send the response to state
       dispatch({
         type: "response/save",
         payload: response,
       });
 
-      // send the success to the state
+      // send the success to state
       dispatch({
         type: "data/success",
         payload,

@@ -1,7 +1,5 @@
 import { StoreStateType } from "../../types";
 
-const initStoreState: StoreStateType = {
-  store: {},
-};
+const initStoreState: StoreStateType = {};
 
 export default initStoreState;

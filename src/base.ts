@@ -4,7 +4,6 @@ import {
   CompleteEndpointFix,
   CompleteEndpointType,
   EndpointBuilder,
-  EndpointFix,
   EndpointType,
   IOptions,
   QueryHookReturnType,
@@ -21,9 +20,7 @@ export const defaultOptions: IOptions<any, any> = {
   endpointName: "",
   transformResponse: (data) => data,
   successCondition: () => true,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  headers: {},
 };
 
 export const createRestBase = (
@@ -50,6 +47,7 @@ export const createRestBase = (
 
     for (const [endpointName, { url, params }] of Object.entries(endpoints)) {
       customHooks[`use${capitalizeFirstLetter(endpointName)}`] = () =>
+        // design flaw here. It makes the items preloaded. prevents rebuilding the headers.
         useRest(
           url,
           { ...params, endpointName: endpointName.toLowerCase() },
@@ -57,7 +55,7 @@ export const createRestBase = (
         );
     }
 
-    return customHooks;
+    return customHooks; // for names basically
   }
 
   const setEndpoints = (x: Record<string, CompleteEndpointType<any, any>>) => {
@@ -74,6 +72,7 @@ export const createRestBase = (
     setEndpoints(builtEndpoints);
 
     return { ...createCustomHooks(builtEndpoints) };
+    ``;
   };
 
   return {
@@ -82,38 +81,48 @@ export const createRestBase = (
   };
 };
 
-/*
-const api = createRestBase({ baseUrl: "" });
+// usage examples.
+// const token = `abcdefghijklmnopqrstuvwxyz`;
 
-const injector = api.createEndpoints(
-  function (builder) {
-    return {
-      login: builder<
-        {
-          completed: boolean;
-          userId: string;
-          id: number;
-          title: string;
-        },
-        void
-      >({
-        url: "",
-        params: {
-          method: "GET",
-          preferCacheValue: true,
-          saveToCache: true,
-          transformResponse: (data) => {
-            return data;
-          },
-        },
-      }),
-      loginPath: builder({
-        url: "",
-        params: {},
-      }),
-    };
-  } // this is the callback which takes the build arguement
-);
+// const api = createRestBase({
+//   baseUrl: "",
+//   prepareHeaders: (headers) => {
+//     if (token) {
+//       headers.set("Authorization", `Bearer ${token}`);
+//     }
+//     return headers;
+//   },
+// });
 
-const { useLogin, useLoginPath } = injector;
-*/
+// const injector = api.createEndpoints(
+//   function (builder) {
+//     return {
+//       login: builder<
+//         // this line contains what you need it.
+//         {
+//           completed: boolean;
+//           userId: string;
+//           id: number;
+//           title: string;
+//         },
+//         void
+//       >({
+//         url: "",
+//         params: {
+//           method: "GET",
+//           preferCacheValue: true,
+//           saveToCache: true,
+//           transformResponse: (data) => {
+//             return data;
+//           },
+//         },
+//       }),
+//       loginPath: builder({
+//         url: "",
+//         params: {},
+//       }),
+//     };
+//   } // this is the callback which takes the build arguement
+// );
+
+// const { useLogin, useLoginPath } = injector;

@@ -41,7 +41,7 @@ export type QueryHookReturnType = [
 ];
 
 export type StoreActionType = "store/save" | "store/clear";
-export type StoreStateType = Record<"store", Record<string, { data: unknown }>>;
+export type StoreStateType = Record<string, any>;
 
 export interface IOptions<R = any, T = any> {
   preferCacheValue: boolean; // uses cached value if available,
@@ -58,11 +58,12 @@ export interface StoreHookReturnType<R, T> {
   save: (id: string, data: unknown, options: IOptions<any, any>) => void;
   get: (id: string) => unknown;
   clear: (id: string) => void;
+  getAll: () => StoreStateType;
 }
 
 export type RestOptionsType = {
   baseUrl: string;
-  headers: Partial<RequestType["headers"]>;
+  prepareHeaders: (headers: Headers) => Headers;
 };
 
 export type EndpointType<R, T> = {

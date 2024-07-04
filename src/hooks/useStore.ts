@@ -15,6 +15,7 @@ import initStoreState from "../lib/states/store";
  * @returns An object containing functions for saving and retrieving data from the store.
  * @returns { save }: A function that saves data to the store. Takes two parameters: id (string) and data (unknown). Returns void.
  * @returns { get }: A function that retrieves data from the store based on the provided id. Takes one parameter: id (string). Returns the data associated with the id.
+ * @returns { getAll }: Returns all data in state.
  * @returns { clear }: A function that clears data from the store based on the provided id. Takes one parameter: id (string)
  */
 
@@ -40,6 +41,7 @@ export function useStore<R = any, T = any>(): StoreHookReturnType<R, T> {
     get: (id: string) => {
       return state.store[id]?.result;
     },
+    getAll: () => state,
     clear: (id: string) =>
       dispatch({
         type: "store/clear",
@@ -47,3 +49,5 @@ export function useStore<R = any, T = any>(): StoreHookReturnType<R, T> {
       }),
   };
 }
+
+export const getStore = useStore().getAll();

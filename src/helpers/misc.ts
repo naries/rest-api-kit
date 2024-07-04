@@ -65,19 +65,15 @@ export const capitalizeFirstLetter = (str: string) => {
 };
 
 export const getBaseUrl = (url: string, baseUrl?: string) => {
-  // check if url and baseurl exists
-  // if not throw an error;
+  // check that url and baseurl exists
+  // else, throw an error;
   if (!url && !baseUrl) {
     throw new Error("url not constructed properly");
   }
 
-  // check if url has a http or https value.
-  // In this case ignore baseurl
-  // if not, merge the base url with the url.
-  // further optimization will be to remove extra slashes
-  // in an event where the base urt is provided with an ending
-  // slash and the url is provided with a preceeding slash
-  // or both arent.
+  // check that url has a http or https value.
+  // ignore baseurl
+  // else, merge baseurl with url.
   if (!/^http(s)?\:\/\//.test(url)) {
     if (baseUrl) {
       // check if url starts with a /
@@ -95,12 +91,12 @@ export const getBaseUrl = (url: string, baseUrl?: string) => {
 };
 
 export const applyChecks = (params: IOptions, response: unknown) => {
-  // check if there is a success condition
+  // check that successCondition exists
+  // else, return error
   if (!params.successCondition(response)) {
     return { type: "error", response };
   }
 
-  // check if user is transforming the response
   return {
     type: "success",
     response: params.transformResponse(response),
@@ -117,10 +113,9 @@ export const load = (
   body: string | Record<string, string>
 ) => {
   // load extras into reducer state
-  // extra contains the url, baseurl, body,
   const paramForHere = { ...params };
-  // delete function properties, we don't wnat
-  // having access to functions in a state
+
+  // delete unwanted function properties
   delete paramForHere.successCondition;
   delete paramForHere.transformResponse;
 
@@ -133,7 +128,7 @@ export const load = (
       ...params,
     },
   });
-  // reset the data, error and response
+  // reset
   dispatch({
     type: "data/reset",
   });
