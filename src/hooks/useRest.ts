@@ -108,6 +108,7 @@ export function useRest<R = any, T = any>(
               url: formattedUrl,
               body: body as Record<string, unknown>,
               headers,
+              method: params.method,
             }
       );
 
