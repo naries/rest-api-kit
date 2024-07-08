@@ -100,8 +100,6 @@ export function useRest<R = any, T = any>(
         headers = options?.prepareHeaders(headers);
       }
 
-      console.log("headers -> ", headers);
-
       // make the request
       const response = await makeRequest(
         params.method === "GET"

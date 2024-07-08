@@ -25,7 +25,7 @@ export async function createRequest(
       };
     }
     const response = await fetch(url, params);
-    return response.json();
+    return await response.json();
   } catch (error) {
     console.log(error, "rest-api-kit-error");
   }

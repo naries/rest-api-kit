@@ -29,7 +29,7 @@ const api = createRestBase({ baseUrl: "https://jsonplaceholder.typicode.com" });
 ```
 
 ### Inject the endpoints
-Create the endpoints at the base of your file so it gets loaded in soon as the app launches.
+Create the endpoints at the base of your index file or App so it gets loaded in soon as uour project starts up.
 ```ts
 const injector = api.createEndpoints((builder) => ({
   getATodo: builder({
@@ -64,7 +64,7 @@ export const { useGetATodo, useCreateTodo, useDeleteTodo } = injector;
 In the components that you need it in, you can use it like so:
 ```ts
 const [getATodo, { data }] = useGetATodo();
-const [deleteATodo, state] = useDeleteTodo()
+const [deleteATodo, state] = useDeleteTodo();
 
 
   console.log(state, "<= state");
@@ -79,3 +79,5 @@ const [deleteATodo, state] = useDeleteTodo()
     })
   }
 ```
+
+## Params
