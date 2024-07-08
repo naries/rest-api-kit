@@ -68,12 +68,12 @@ export type RestOptionsType = {
 
 export type EndpointType<R, T> = {
   url: string;
-  params: Partial<IOptions<R, T>>;
+  params?: Partial<IOptions<R, T>>;
 };
 
 export type CompleteEndpointType<R, T> = {
   url: string;
-  params: IOptions<R, T>;
+  params?: IOptions<R, T>;
 };
 
 export type EndpointFix = Record<string, EndpointType<any, any>>;

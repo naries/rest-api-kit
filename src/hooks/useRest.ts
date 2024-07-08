@@ -95,7 +95,10 @@ export function useRest<R = any, T = any>(
       dispatch({ type: "loading/start" });
 
       // configure headers
-      let headers = new Headers({ ...paramsFromBase?.headers });
+      let headers = new Headers({
+        "Content-Type": "application/json",
+        ...paramsFromBase?.headers,
+      });
       if (options?.prepareHeaders) {
         headers = options?.prepareHeaders(headers);
       }

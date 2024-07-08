@@ -45,7 +45,10 @@ export const createRestBase = (
   > {
     const customHooks: Record<string, () => QueryHookReturnType> = {};
 
-    for (const [endpointName, { url, params }] of Object.entries(endpoints)) {
+    for (const [
+      endpointName,
+      { url, params = defaultOptions },
+    ] of Object.entries(endpoints)) {
       customHooks[`use${capitalizeFirstLetter(endpointName)}`] = () =>
         // design flaw here. It makes the items preloaded. prevents rebuilding the headers.
         useRest(
