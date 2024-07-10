@@ -12,7 +12,6 @@ import {
   applyChecks,
   clearMultipleIds,
   concatenateParamsWithUrl,
-  createUniqueId,
   getBaseUrl,
   load,
 } from "../helpers/misc";
@@ -57,7 +56,7 @@ export function useRest<R = any, T = any>(
       url = getBaseUrl(url, options?.baseUrl); // redefine url
 
       const formattedUrl =
-        params.method === "GET"
+        params.method === "GET" || params.bodyAsQueryParams
           ? concatenateParamsWithUrl(url, body.toString())
           : url;
 

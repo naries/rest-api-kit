@@ -20,6 +20,7 @@ export const defaultOptions: IOptions<any, any> = {
   endpointName: "",
   transformResponse: (data) => data,
   successCondition: () => true,
+  bodyAsQueryParams: false,
   headers: {},
 };
 

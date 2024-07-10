@@ -52,6 +52,7 @@ export interface IOptions<R = any, T = any> {
   successCondition: (data: R) => boolean;
   transformResponse: (data: R, body?: T) => unknown;
   headers: HeadersInit;
+  bodyAsQueryParams: boolean
 }
 
 export interface StoreHookReturnType<R, T> {
