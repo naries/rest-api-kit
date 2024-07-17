@@ -53,11 +53,19 @@ export function useRest<R = any, T = any>(
   const trigger = async (body: string | Record<string, string> = {}) => {
     try {
       const params = { ...paramsFromBase };
+      // configure headers
+      let headers = new Headers({
+        "Content-Type": "application/json",
+        ...paramsFromBase?.headers,
+      });
+      if (options?.prepareHeaders) {
+        headers = options?.prepareHeaders(headers);
+      }
       url = getBaseUrl(url, options?.baseUrl); // redefine url
 
       const formattedUrl =
         params.method === "GET" || params.bodyAsQueryParams
-          ? concatenateParamsWithUrl(url, body.toString())
+          ? concatenateParamsWithUrl(url, body)
           : url;
 
       load(dispatch, formattedUrl, params, body);
@@ -71,7 +79,7 @@ export function useRest<R = any, T = any>(
         let cachedResult = getFromStore(storeIdentifier);
         if (cachedResult) {
           const { type: checkType, response: payload } = applyChecks(
-            params,
+            { ...params, headers },
             cachedResult
           );
           if (checkType === "error") {
@@ -93,22 +101,15 @@ export function useRest<R = any, T = any>(
       dispatch({ type: "error/reset" });
       dispatch({ type: "loading/start" });
 
-      // configure headers
-      let headers = new Headers({
-        "Content-Type": "application/json",
-        ...paramsFromBase?.headers,
-      });
-      if (options?.prepareHeaders) {
-        headers = options?.prepareHeaders(headers);
-      }
-
       // make the request
       const response = await makeRequest(
         params.method === "GET"
           ? formattedUrl
           : {
               url: formattedUrl,
-              body: body as Record<string, unknown>,
+              body: params.bodyAsQueryParams
+                ? {}
+                : (body as Record<string, unknown>),
               headers,
               method: params.method,
             }
@@ -122,7 +123,7 @@ export function useRest<R = any, T = any>(
 
       // apply checks on response
       const { type: checkType, response: payload } = applyChecks(
-        params,
+        { ...params, headers },
         response
       );
 
