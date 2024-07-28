@@ -76,7 +76,6 @@ export const createRestBase = (
     setEndpoints(builtEndpoints);
 
     return { ...createCustomHooks(builtEndpoints) };
-    ``;
   };
 
   return {

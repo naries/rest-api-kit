@@ -6,6 +6,7 @@ import {
   MethodType,
   RestOptionsType,
   IOptions,
+  TypedQueryHookReturnType,
 } from "../types";
 import { makeRequest } from "../apifunctions";
 import {
@@ -31,11 +32,11 @@ import { useStore } from "./storeListener";
  * @format
  */
 
-export function useRest<R = any, T = any>(
+export function useRest<R = unknown, T = void>(
   url: string,
   paramsFromBase: IOptions<any, any>,
   options: Partial<RestOptionsType> = {}
-): QueryHookReturnType {
+): TypedQueryHookReturnType<T> {
   const [state, dispatch] = useReducer<
     (
       state: RequestStateType,
@@ -50,7 +51,7 @@ export function useRest<R = any, T = any>(
     clear: clearFromStore,
   } = useStore<R, T>();
 
-  const trigger = async (body: string | Record<string, string> = {}) => {
+  const trigger = async (body?: T, urlParams?: Record<string, string>) => {
     try {
       const params = { ...paramsFromBase };
       // configure headers
@@ -65,10 +66,12 @@ export function useRest<R = any, T = any>(
 
       const formattedUrl =
         params.method === "GET" || params.bodyAsQueryParams
-          ? concatenateParamsWithUrl(url, body)
+          ? concatenateParamsWithUrl(url, body as {})
+          : !!body && !!urlParams
+          ? concatenateParamsWithUrl(url, urlParams)
           : url;
 
-      load(dispatch, formattedUrl, params, body);
+      load(dispatch, formattedUrl, { ...params, headers }, body as {});
       let storeIdentifier = `${options.baseUrl || ""}&${params.endpointName}`;
 
       // Check if preferCacheValue is set to true,
@@ -102,7 +105,10 @@ export function useRest<R = any, T = any>(
       dispatch({ type: "loading/start" });
 
       // make the request
-      const response = await makeRequest(
+      const response:
+        | { type: string; data: string }
+        | { type: string; data: Promise<any> }
+        | undefined = await makeRequest(
         params.method === "GET"
           ? formattedUrl
           : {
@@ -110,21 +116,26 @@ export function useRest<R = any, T = any>(
               body: params.bodyAsQueryParams
                 ? {}
                 : (body as Record<string, unknown>),
-              headers,
               method: params.method,
-            }
+            },
+        headers
       );
+
+      if (response?.type === "error") {
+        dispatch({ type: "data/error", payload: response?.data });
+        return;
+      }
 
       // if saveToCache option is set to true
       // save response to cache
       if (params.saveToCache) {
-        saveToStore(storeIdentifier, response, { ...params });
+        saveToStore(storeIdentifier, response?.data, { ...params });
       }
 
       // apply checks on response
       const { type: checkType, response: payload } = applyChecks(
         { ...params, headers },
-        response
+        response?.data
       );
 
       // if error, send error to state
@@ -139,7 +150,7 @@ export function useRest<R = any, T = any>(
       // send the response to state
       dispatch({
         type: "response/save",
-        payload: response,
+        payload: response?.data,
       });
 
       // send the success to state

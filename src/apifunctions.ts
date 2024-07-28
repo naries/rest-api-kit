@@ -2,9 +2,9 @@ import { FetchApiRequestType, MethodType, RequestType } from "./types";
 
 export async function createRequest(
   url = "",
+  headers = {},
   method?: MethodType,
   body = {},
-  headers = {},
   rest?: Partial<Omit<RequestType, "headers" | "url" | "method" | "body">>
 ) {
   try {
@@ -25,19 +25,30 @@ export async function createRequest(
       };
     }
     const response = await fetch(url, params);
-    return response.json();
+    if (!response.ok) {
+      if (response.status > 299) {
+        return {
+          type: "error",
+          data: `Request failed with status: ${response.status}`,
+        };
+      }
+    }
+    return { type: "success", data: await response.json() };
   } catch (error) {
-    console.log(error, "rest-api-kit-error");
+    return { type: "error", data: "An error occured" };
   }
 }
 
-export function makeRequest(payload: string | Partial<RequestType>) {
+export function makeRequest(
+  payload: string | Partial<RequestType>,
+  headers: Headers
+) {
   if (!payload) {
     return;
   }
   if (typeof payload === "string") {
-    return createRequest(payload);
+    return createRequest(payload, headers);
   }
-  const { url, method, body, headers, ...rest } = payload;
-  return createRequest(url, method, body, headers, rest);
+  const { url, method, body, ...rest } = payload;
+  return createRequest(url, headers, method, body, rest);
 }

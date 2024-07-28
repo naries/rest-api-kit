@@ -12,8 +12,16 @@ export const concatenateParamsWithUrl = (
   if (!body) {
     return url;
   }
-  if (typeof body === "string") {
+  if (typeof body === "string") {npm
     return `${url}${body}`;
+  }
+  // use paths url contains `/:`
+  if (url.includes("/:")) {
+    for (const [key, value] of Object.entries(body)) {
+      const regex = new RegExp(`/:${key}`, "g");
+      url = url.replace(regex, `/${value}`);
+    }
+    return url;
   }
   const queryString = Object.entries(body)
     .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)

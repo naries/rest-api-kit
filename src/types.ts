@@ -40,6 +40,11 @@ export type QueryHookReturnType = [
   state: RequestStateType
 ];
 
+export type TypedQueryHookReturnType<T> = [
+  (body?: T) => void,
+  state: RequestStateType
+];
+
 export type StoreActionType = "store/save" | "store/clear";
 export type StoreStateType = Record<string, any>;
 
@@ -52,7 +57,7 @@ export interface IOptions<R = any, T = any> {
   successCondition: (data: R) => boolean;
   transformResponse: (data: R, body?: T) => unknown;
   headers: HeadersInit;
-  bodyAsQueryParams: boolean
+  bodyAsQueryParams: boolean;
 }
 
 export interface StoreHookReturnType<R, T> {
