@@ -12,14 +12,22 @@ export const concatenateParamsWithUrl = (
   if (!body) {
     return url;
   }
-  if (typeof body === "string") {npm
+  if (typeof body === "string") {
     return `${url}${body}`;
   }
   // use paths url contains `/:`
   if (url.includes("/:")) {
+    const queryParams = [];
     for (const [key, value] of Object.entries(body)) {
       const regex = new RegExp(`/:${key}`, "g");
-      url = url.replace(regex, `/${value}`);
+      if (regex.test(url)) {
+        url = url.replace(regex, `/${value}`);
+      } else {
+        queryParams.push(`${key}=${value}`);
+      }
+    }
+    if (queryParams.length > 0) {
+      url += `?${queryParams.join("&")}`;
     }
     return url;
   }

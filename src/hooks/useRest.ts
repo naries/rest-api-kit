@@ -32,11 +32,11 @@ import { useStore } from "./storeListener";
  * @format
  */
 
-export function useRest<R = unknown, T = void>(
+export function useRest<R = unknown, B = void>(
   url: string,
-  paramsFromBase: IOptions<any, any>,
+  paramsFromBase: R extends IOptions<any, any> ? R : never,
   options: Partial<RestOptionsType> = {}
-): TypedQueryHookReturnType<T> {
+): TypedQueryHookReturnType<B> {
   const [state, dispatch] = useReducer<
     (
       state: RequestStateType,
@@ -49,9 +49,9 @@ export function useRest<R = unknown, T = void>(
     save: saveToStore,
     get: getFromStore,
     clear: clearFromStore,
-  } = useStore<R, T>();
+  } = useStore<R, B>();
 
-  const trigger = async (body?: T, urlParams?: Record<string, string>) => {
+  const trigger = async (body?: B, urlParams?: Record<string, string>) => {
     try {
       const params = { ...paramsFromBase };
       // configure headers
@@ -65,7 +65,7 @@ export function useRest<R = unknown, T = void>(
       url = getBaseUrl(url, options?.baseUrl); // redefine url
 
       const formattedUrl =
-        params.method === "GET" || params.bodyAsQueryParams
+        params.method === "GET" || params.bodyAsParams
           ? concatenateParamsWithUrl(url, body as {})
           : !!body && !!urlParams
           ? concatenateParamsWithUrl(url, urlParams)
@@ -113,7 +113,7 @@ export function useRest<R = unknown, T = void>(
           ? formattedUrl
           : {
               url: formattedUrl,
-              body: params.bodyAsQueryParams
+              body: params.bodyAsParams
                 ? {}
                 : (body as Record<string, unknown>),
               method: params.method,

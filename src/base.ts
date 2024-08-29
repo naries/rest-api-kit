@@ -1,3 +1,4 @@
+import { defaultOptions } from "./defaullts";
 import { capitalizeFirstLetter } from "./helpers/misc";
 import { useRest } from "./hooks";
 import {
@@ -11,19 +12,6 @@ import {
   RestOptionsType,
 } from "./types";
 
-// default options that useRest takes by default.
-export const defaultOptions: IOptions<any, any> = {
-  preferCacheValue: false,
-  updates: [],
-  method: "GET",
-  saveToCache: false,
-  endpointName: "",
-  transformResponse: (data) => data,
-  successCondition: () => true,
-  bodyAsQueryParams: false,
-  headers: {},
-};
-
 export const createRestBase = (
   restBaseOptions: Partial<RestOptionsType> = {}
 ): RestBaseReturnType => {
@@ -32,8 +20,6 @@ export const createRestBase = (
   function build<U, V>(
     endpoint: EndpointType<U, V>
   ): CompleteEndpointType<U, V> {
-    // here's where we can specify other parameters that we need to specify for an endpoint
-    // more like an engine set to work on the endpoint and returns an object
     const params: IOptions<U, V> = { ...defaultOptions, ...endpoint.params };
     return { ...endpoint, params };
   }
@@ -51,7 +37,6 @@ export const createRestBase = (
       { url, params = defaultOptions },
     ] of Object.entries(endpoints)) {
       customHooks[`use${capitalizeFirstLetter(endpointName)}`] = () =>
-        // design flaw here. It makes the items preloaded. prevents rebuilding the headers.
         useRest(
           url,
           { ...params, endpointName: endpointName.toLowerCase() },
@@ -59,7 +44,7 @@ export const createRestBase = (
         );
     }
 
-    return customHooks; // for names basically
+    return customHooks;
   }
 
   const setEndpoints = (x: Record<string, CompleteEndpointType<any, any>>) => {
