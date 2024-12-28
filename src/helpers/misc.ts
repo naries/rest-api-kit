@@ -144,14 +144,4 @@ export const load = (
       ...params,
     },
   });
-  // reset
-  dispatch({
-    type: "data/reset",
-  });
-  dispatch({
-    type: "error/reset",
-  });
-  dispatch({
-    type: "response/reset",
-  });
 };

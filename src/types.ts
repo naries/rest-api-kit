@@ -33,7 +33,9 @@ export type ActionTypes =
   | "error/reset"
   | "extra/save"
   | "response/save"
-  | "response/reset";
+  | "response/reset"
+  | "reset/loading"
+  | "response/state/save";
 
 export type QueryHookReturnType = [
   (body?: Record<string, string>) => void,

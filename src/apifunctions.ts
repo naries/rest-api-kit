@@ -30,12 +30,13 @@ export async function createRequest(
         return {
           type: "error",
           data: `Request failed with status: ${response.status}`,
+          info: response,
         };
       }
     }
     return { type: "success", data: await response.json() };
   } catch (error) {
-    return { type: "error", data: "An error occured" };
+    return { type: "error", data: "An error occured", info: error };
   }
 }
 

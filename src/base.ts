@@ -57,7 +57,7 @@ export const createRestBase = (
     `use${string & Capitalize<keyof T extends string ? keyof T : never>}`,
     () => QueryHookReturnType
   > => {
-    const builtEndpoints = callback(build); // to use callback, it takes a function build
+    const builtEndpoints = callback(build);
     setEndpoints(builtEndpoints);
 
     return { ...createCustomHooks(builtEndpoints) };
