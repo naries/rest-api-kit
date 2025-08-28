@@ -1,6 +1,6 @@
 {
   "name": "rest-api-kit",
-  "version": "0.0.53",
+  "version": "0.0.54",
   "description": "Enterprise-grade TypeScript REST API management library for React and React Native with advanced caching, state management, and performance optimization",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
