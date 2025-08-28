@@ -3,20 +3,30 @@
         "strict": true,
         "noImplicitAny": true,
         "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
         "strictNullChecks": true,
-        "target": "ES2022",
+        "target": "ES2018",
+        "lib": ["ES2018", "DOM", "DOM.Iterable"],
         "moduleResolution": "Node",
         "module": "CommonJS",
         "declaration": true,
+        "declarationMap": true,
         "isolatedModules": true,
         "noEmit": true,
         "outDir": "dist",
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "jsx": "react-jsx",
         "types": ["jest", "node"]
     },
     "include": [
-        "src"
+        "src/**/*"
     ],
     "exclude": [
-        "node_modules"
+        "node_modules",
+        "dist",
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "examples"
     ]
 }
