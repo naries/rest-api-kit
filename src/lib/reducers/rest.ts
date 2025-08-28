@@ -1,7 +1,7 @@
 import { ActionTypes, RequestStateType } from "../../types";
 
-function restReducer(
-  state: RequestStateType,
+function restReducer<TData = unknown>(
+  state: RequestStateType<TData>,
   {
     type,
     payload,
@@ -9,13 +9,13 @@ function restReducer(
     type: ActionTypes;
     payload?: unknown;
   }
-) {
+): RequestStateType<TData> {
   switch (type) {
     case "response/state/save": {
       return {
         ...state,
         response: payload,
-        data: payload?.data,
+        data: (payload as any)?.data,
         isLoading: false,
         isSuccess: true,
       };
@@ -24,7 +24,7 @@ function restReducer(
       return {
         ...state,
         isLoading: true,
-        data: undefined,
+        data: undefined as any,
         error: undefined,
         isSuccess: false,
       };
@@ -35,7 +35,7 @@ function restReducer(
     case "data/success":
       return {
         ...state,
-        data: payload,
+        data: payload as TData,
         error: undefined,
         isLoading: false,
         isSuccess: true,
@@ -43,20 +43,20 @@ function restReducer(
     case "data/error":
       return {
         ...state,
-        data: undefined,
+        data: undefined as any,
         error: payload,
         isSuccess: false,
         isLoading: false,
       };
     case "data/reset":
-      return { ...state, data: undefined };
+      return { ...state, data: undefined as any };
     case "error/reset":
       return { ...state, error: undefined };
     case "extra/save":
       return {
         ...state,
         extra: payload,
-        data: undefined,
+        data: undefined as any,
         error: undefined,
         response: undefined,
         isLoading: false,
@@ -66,7 +66,7 @@ function restReducer(
     case "response/reset":
       return { ...state, response: undefined };
     default:
-      return "Unrecognized command";
+      return state;
   }
 }
 

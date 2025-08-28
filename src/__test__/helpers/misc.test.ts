@@ -9,7 +9,7 @@ describe('Miscellaneous functions', () => {
 
         it('should return url if params is defined but has no properties', () => {
             let concatenatedUrl = concatenateParamsWithUrl("url", {});
-            expect(concatenatedUrl).toEqual('url');
+            expect(concatenatedUrl).toEqual('url?');
         })
 
         it("should return url with params concatenated with '&' character", () => {

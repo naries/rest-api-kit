@@ -1,6 +1,6 @@
 import { RequestStateType } from "../../types";
 
-const initRestState: RequestStateType = {
+const initRestState: RequestStateType<any> = {
   isLoading: false,
   data: undefined,
   response: undefined,

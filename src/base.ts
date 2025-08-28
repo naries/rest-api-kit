@@ -16,6 +16,8 @@ export const createRestBase = (
   restBaseOptions: Partial<RestOptionsType> = {}
 ): RestBaseReturnType => {
   let endpoints: { [x: string]: CompleteEndpointType<any, any> } = {};
+  let hooks: Record<string, () => QueryHookReturnType> = {};
+  let isInitialized = false;
 
   function build<U, V>(
     endpoint: EndpointType<U, V>
@@ -26,22 +28,30 @@ export const createRestBase = (
 
   function createCustomHooks<T extends CompleteEndpointFix>(
     endpoints: T
-  ): Record<
-    `use${string & Capitalize<keyof T extends string ? keyof T : never>}`,
-    () => QueryHookReturnType
-  > {
+  ): Record<string, () => QueryHookReturnType> {
     const customHooks: Record<string, () => QueryHookReturnType> = {};
 
     for (const [
       endpointName,
       { url, params = defaultOptions },
     ] of Object.entries(endpoints)) {
-      customHooks[`use${capitalizeFirstLetter(endpointName)}`] = () =>
-        useRest(
+      const hookName = `use${capitalizeFirstLetter(endpointName)}`;
+      
+      // Create a closure that captures the endpoint configuration
+      customHooks[hookName] = (() => {
+        // Memoize the useRest call configuration
+        const memoizedConfig = {
           url,
-          { ...params, endpointName: endpointName.toLowerCase() },
+          params: { ...params, endpointName: endpointName.toLowerCase() },
           restBaseOptions
+        };
+        
+        return () => useRest(
+          memoizedConfig.url,
+          memoizedConfig.params,
+          memoizedConfig.restBaseOptions
         );
+      })();
     }
 
     return customHooks;
@@ -53,64 +63,117 @@ export const createRestBase = (
 
   const createEndpoints = <T extends CompleteEndpointFix>(
     callback: (builder: EndpointBuilder) => T
-  ): Record<
-    `use${string & Capitalize<keyof T extends string ? keyof T : never>}`,
-    () => QueryHookReturnType
-  > => {
-    const builtEndpoints = callback(build);
-    setEndpoints(builtEndpoints);
+  ): RestBaseReturnType<T> => {
+    // Only initialize once per app lifecycle
+    if (!isInitialized) {
+      const builtEndpoints = callback(build);
+      setEndpoints(builtEndpoints);
+      hooks = createCustomHooks(builtEndpoints);
+      isInitialized = true;
+    } else {
+      console.warn(
+        'rest-api-kit: createEndpoints called multiple times. ' +
+        'Endpoints should be created once at app initialization. ' +
+        'Using previously initialized endpoints.'
+      );
+    }
 
-    return { ...createCustomHooks(builtEndpoints) };
+    // Create a new API instance with the hooks attached
+    const apiWithHooks = {
+      createEndpoints,
+      endpoints,
+      ...hooks,
+    } as RestBaseReturnType<T>;
+
+    return apiWithHooks;
   };
 
   return {
     createEndpoints,
     endpoints,
-  };
+  } as RestBaseReturnType;
 };
 
-// usage examples.
+// Usage examples - Initialize ONCE at app startup:
 // const token = `abcdefghijklmnopqrstuvwxyz`;
 
+// // ⚠️ IMPORTANT: Create this ONCE at the top level of your app
+// // DO NOT call createEndpoints inside components or other functions
 // const api = createRestBase({
-//   baseUrl: "",
+//   baseUrl: "https://jsonplaceholder.typicode.com",
 //   prepareHeaders: (headers) => {
 //     if (token) {
 //       headers.set("Authorization", `Bearer ${token}`);
 //     }
 //     return headers;
 //   },
-// });
+// }).createEndpoints((builder) => ({
+//   login: builder<
+//     // ✅ Response type - this types the 'data' property in hook state
+//     {
+//       completed: boolean;
+//       userId: string;
+//       id: number;
+//       title: string;
+//     },
+//     // ✅ Request body type - this types the parameter for trigger function
+//     { username: string; password: string }
+//   >({
+//     url: "/login",
+//     params: {
+//       method: "POST",
+//       preferCacheValue: false,
+//       saveToCache: true,
+//       transformResponse: (data) => {
+//         return data;
+//       },
+//     },
+//   }),
+//   getTodos: builder<
+//     // ✅ Response type - data will be typed as this array
+//     Array<{ id: number; title: string; completed: boolean }>,
+//     // ✅ Request type - void means no parameters needed for trigger()
+//     void
+//   >({
+//     url: "/todos",
+//     params: {
+//       method: "GET",
+//       preferCacheValue: true,
+//       saveToCache: true,
+//       updates: [], // Clear cache for other endpoints when this succeeds
+//     },
+//   }),
+//   createTodo: builder<
+//     // ✅ Response type - data will be typed as this object
+//     { id: number; title: string; completed: boolean },
+//     // ✅ Request type - trigger() will expect this shape
+//     { title: string; completed?: boolean }
+//   >({
+//     url: "/todos",
+//     params: {
+//       method: "POST",
+//       preferCacheValue: false,
+//       saveToCache: false,
+//       updates: ["getTodos"], // Clear todos cache when creating new todo
+//       transformResponse: (data, body) => {
+//         return { ...data, locallyCreated: true };
+//       },
+//     },
+//   }),
+// }));
 
-// const injector = api.createEndpoints(
-//   function (builder) {
-//     return {
-//       login: builder<
-//         // this line contains what you need it.
-//         {
-//           completed: boolean;
-//           userId: string;
-//           id: number;
-//           title: string;
-//         },
-//         void
-//       >({
-//         url: "",
-//         params: {
-//           method: "GET",
-//           preferCacheValue: true,
-//           saveToCache: true,
-//           transformResponse: (data) => {
-//             return data;
-//           },
-//         },
-//       }),
-//       loginPath: builder({
-//         url: "",
-//         params: {},
-//       }),
-//     };
-//   } // this is the callback which takes the build arguement
-// );
+// // Export for use throughout your app
+// export { api };
 
-// const { useLogin, useLoginPath } = injector;
+// Now you can use hooks anywhere in your components with full type safety:
+// const [loginTrigger, loginState] = api.useLogin();
+// // ✅ loginState.data is typed as { completed: boolean; userId: string; id: number; title: string } | undefined
+// // ✅ loginTrigger expects { username: string; password: string }
+
+// const [getTodosTrigger, todosState] = api.useGetTodos();
+// // ✅ todosState.data is typed as Array<{ id: number; title: string; completed: boolean }> | undefined
+// // ✅ getTodosTrigger expects no parameters (void)
+
+// const [createTodoTrigger, createState] = api.useCreateTodo();
+// // ✅ createState.data is typed as { id: number; title: string; completed: boolean } | undefined
+// // ✅ createTodoTrigger expects { title: string; completed?: boolean }

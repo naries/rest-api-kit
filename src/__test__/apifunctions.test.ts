@@ -12,34 +12,50 @@ afterEach(() => {
 describe("API request functions", () => {
   describe("createRequest", () => {
     it("should default to GET method if none is provided", async () => {
-      fetchMock.mockResponseOnce(JSON.stringify({}));
+      const payload = { a: 1 };
+      fetchMock.mockResponseOnce(JSON.stringify(payload), {
+        headers: { 'content-type': 'application/json' }
+      });
       const response = await createRequest("/test");
-      expect(response).toEqual({});
+      expect(response.type).toBe("success");
+      expect(response.data).toEqual(payload);
+      expect(response.status).toBe(200);
     });
 
     it("should handle errors gracefully", async () => {
       fetchMock.mockRejectOnce(new Error("Network error"));
       const response = await createRequest("/test");
-      expect(response).toBeUndefined();
+      expect(response?.type).toBe("error");
+      expect(response?.data).toBe("Network error");
     });
   });
 
   describe("makeRequest", () => {
     it("should pass string payload to createRequest", async () => {
-      fetchMock.mockResponseOnce(JSON.stringify({ key: "value" }));
-      const response = await makeRequest("/test");
-      expect(response).toEqual({ key: "value" });
+      const payload = { key: "value" };
+      fetchMock.mockResponseOnce(JSON.stringify(payload), {
+        headers: { 'content-type': 'application/json' }
+      });
+      const response = await makeRequest("/test", new Headers());
+      expect(response?.type).toBe("success");
+      expect(response?.data).toEqual(payload);
     });
 
     it("should pass object payload to createRequest", async () => {
-      fetchMock.mockResponseOnce(JSON.stringify({ key: "value" }));
-      const response = await makeRequest({
-        url: "/test",
-        method: "POST",
-        body: { foo: "bar" },
-        headers: {},
+      const payload = { key: "value" };
+      fetchMock.mockResponseOnce(JSON.stringify(payload), {
+        headers: { 'content-type': 'application/json' }
       });
-      expect(response).toEqual({ key: "value" });
+      const response = await makeRequest(
+        {
+          url: "/test",
+          method: "POST",
+          body: { foo: "bar" },
+        },
+        new Headers()
+      );
+      expect(response?.type).toBe("success");
+      expect(response?.data).toEqual(payload);
     });
   });
 });

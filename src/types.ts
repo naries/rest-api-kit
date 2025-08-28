@@ -1,11 +1,11 @@
-export type MethodType = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+export type MethodType = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS";
 
 export type RequestType = {
   url: string;
   method: MethodType;
   mode: RequestMode;
   cache: "default" | "no-cache" | "reload" | "force-cache" | "only-if-cached";
-  credentials: "same-origin" | "include" | "same-origin" | "omit";
+  credentials: "same-origin" | "include" | "omit";
   redirect: "manual" | "follow" | "error";
   referrerPolicy: "no-referrer" | "no-referrer-when-downgrade" | "origin";
   body: Record<string, unknown>;
@@ -15,9 +15,9 @@ export type RequestType = {
 export type FetchApiRequestType = Omit<Partial<RequestType>, "body"> & {
   body?: string;
 };
-export type RequestStateType = {
+export type RequestStateType<TData = unknown> = {
   isLoading: boolean;
-  data: unknown;
+  data: TData;
   response: unknown;
   error: unknown;
   isSuccess: boolean;
@@ -42,9 +42,9 @@ export type QueryHookReturnType = [
   state: RequestStateType
 ];
 
-export type TypedQueryHookReturnType<T> = [
-  (body?: T) => void,
-  state: RequestStateType
+export type TypedQueryHookReturnType<TBody = void, TData = unknown> = [
+  (body?: TBody) => void,
+  state: RequestStateType<TData>
 ];
 
 export type StoreActionType = "store/save" | "store/clear";
@@ -98,12 +98,13 @@ export type BuildCallBackType = (
   builder: EndpointBuilder
 ) => Record<string, EndpointType<any, any>>;
 
-export type RestBaseReturnType = {
-  createEndpoints: <T extends CompleteEndpointFix>(
-    callback: (builder: EndpointBuilder) => T
-  ) => Record<
-    `use${string & Capitalize<keyof T extends string ? keyof T : never>}`,
-    () => QueryHookReturnType
-  >;
+export type RestBaseReturnType<T extends Record<string, any> = {}> = {
+  createEndpoints: <U extends CompleteEndpointFix>(
+    callback: (builder: EndpointBuilder) => U
+  ) => RestBaseReturnType<U>;
   endpoints: EndpointFix;
+} & {
+  [K in keyof T as `use${Capitalize<string & K>}`]: () => T[K] extends CompleteEndpointType<infer R, infer B> 
+    ? TypedQueryHookReturnType<B, R>
+    : QueryHookReturnType;
 };

@@ -32,16 +32,16 @@ import { useStore } from "./storeListener";
  * @format
  */
 
-export function useRest<R = unknown, B = void>(
+export function useRest<TData = unknown, TBody = void>(
   url: string,
-  paramsFromBase: R extends IOptions<any, any> ? R : never,
+  paramsFromBase: IOptions<TData, TBody>,
   options: Partial<RestOptionsType> = {}
-): TypedQueryHookReturnType<B> {
+): TypedQueryHookReturnType<TBody, TData> {
   const [state, dispatch] = useReducer<
     (
-      state: RequestStateType,
+      state: RequestStateType<TData>,
       action: { type: ActionTypes; payload?: unknown }
-    ) => any
+    ) => RequestStateType<TData>
   >(restReducer, initRestState);
 
   // store
@@ -49,9 +49,9 @@ export function useRest<R = unknown, B = void>(
     save: saveToStore,
     get: getFromStore,
     clear: clearFromStore,
-  } = useStore<R, B>();
+  } = useStore<TData, TBody>();
 
-  const trigger = async (body?: B, urlParams?: Record<string, string>) => {
+  const trigger = async (body?: TBody, urlParams?: Record<string, string>) => {
     try {
       const params = { ...paramsFromBase };
       // configure headers
@@ -62,14 +62,14 @@ export function useRest<R = unknown, B = void>(
       if (options?.prepareHeaders) {
         headers = options?.prepareHeaders(headers);
       }
-      url = getBaseUrl(url, options?.baseUrl); // redefine url
+  const resolvedBaseUrl = getBaseUrl(url, options?.baseUrl);
 
       const formattedUrl =
         params.method === "GET" || params.bodyAsParams
-          ? concatenateParamsWithUrl(url, body as {})
+          ? concatenateParamsWithUrl(resolvedBaseUrl, body as {})
           : !!body && !!urlParams
-          ? concatenateParamsWithUrl(url, urlParams)
-          : url;
+          ? concatenateParamsWithUrl(resolvedBaseUrl, urlParams)
+          : resolvedBaseUrl;
 
       load(dispatch, formattedUrl, { ...params, headers }, body as {});
       let storeIdentifier = `${options.baseUrl || ""}&${params.endpointName}`;
@@ -105,10 +105,7 @@ export function useRest<R = unknown, B = void>(
       dispatch({ type: "loading/start" });
 
       // make the request
-      const response:
-        | { type: string; data: string }
-        | { type: string; data: Promise<any> }
-        | undefined = await makeRequest(
+      const response = await makeRequest(
         params.method === "GET"
           ? formattedUrl
           : {
@@ -160,7 +157,8 @@ export function useRest<R = unknown, B = void>(
       });
 
       if (params.updates.length > 0) {
-        clearMultipleIds(params.updates, options.baseUrl || "", (id: string) =>
+        const normalized = params.updates.map((u) => u.toLowerCase());
+        clearMultipleIds(normalized, options.baseUrl || "", (id: string) =>
           clearFromStore(id)
         );
       }

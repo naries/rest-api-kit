@@ -1,45 +1,38 @@
 import { renderHook, act } from '@testing-library/react-hooks';
 import { useRest } from '../../hooks/useRest';
-import * as apifunctions from '../../apifunctions'; // Adjust the import path as needed
-import * as helpers from '../../helpers/misc'; // Adjust the import path as needed
+import { defaultOptions } from '../../defaullts';
+import * as apifunctions from '../../apifunctions';
 
 describe('useRest', () => {
-    const url = 'https://example.com/api';
-    const params = { page: '1', limit: '10' };
-    const responseData = { /* mocked response data */ };
-    const makeRequestMock = jest.spyOn(apifunctions, 'makeRequest').mockResolvedValueOnce(responseData);
-    const concatenateParamsWithUrl = jest.spyOn(helpers, 'concatenateParamsWithUrl').mockReturnValueOnce(url);
+    const url = 'https://example.com/api/resource';
+    const responsePayload = { id: 1, name: 'Test' };
+
+    beforeEach(() => {
+        jest.spyOn(apifunctions, 'makeRequest').mockResolvedValueOnce({ type: 'success', data: responsePayload });
+    });
 
     afterEach(() => {
-        makeRequestMock.mockRestore();
-        concatenateParamsWithUrl.mockRestore();
-    })
+        jest.restoreAllMocks();
+    });
 
-    test('should trigger request and update state', async () => {
-        const { result, waitForNextUpdate, rerender } = renderHook(() => useRest(url, params));
-        const [trigger, state] = result.current;
-
-        expect(state.isLoading).toBeFalsy();
-        expect(state.data).toBeUndefined();
-        expect(state.error).toBeUndefined();
+    test('triggers request and updates state with transformed data', async () => {
+        const params = { ...defaultOptions, endpointName: 'testendpoint', saveToCache: true };
+        const { result, waitForNextUpdate } = renderHook(() => useRest(url, params, {}));
+        const [trigger, stateBefore] = result.current;
+        expect(stateBefore.isLoading).toBeFalsy();
 
         act(() => {
             trigger();
         });
 
-        expect(state.isLoading).toBeTruthy();
-        rerender();
+        // state becomes loading
+        const [, loadingState] = result.current;
+        expect(loadingState.isLoading).toBeTruthy();
 
         await waitForNextUpdate();
-
-        rerender();
-
-        expect(state.isLoading).toBeFalsy();
-        expect(state.data).toEqual(responseData);
-        expect(state.error).toBeUndefined();
-
-
-        expect(makeRequestMock).toHaveBeenCalledWith(url);
-        expect(concatenateParamsWithUrl).toHaveBeenCalledWith(url, params);
+        const [, finalState] = result.current;
+        expect(finalState.isLoading).toBeFalsy();
+        expect(finalState.data).toEqual(responsePayload);
+        expect(finalState.error).toBeUndefined();
     });
 });

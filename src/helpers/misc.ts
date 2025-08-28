@@ -69,10 +69,11 @@ export const clearMultipleIds = (
 
 // cache store function
 export const deleteId = (state: StoreStateType, id: string) => {
-  if (!Object(state.store).hasownProperty(id)) {
+  // state is the store object itself (key -> cached value)
+  if (!Object.prototype.hasOwnProperty.call(state, id)) {
     return state;
   }
-  delete state.store[id];
+  delete (state as Record<string, unknown>)[id];
   return state;
 };
 
