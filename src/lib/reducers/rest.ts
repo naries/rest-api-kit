@@ -1,4 +1,4 @@
-import { ActionTypes, RequestStateType } from "../../types";
+import { ActionTypes, RequestStateType } from '../../types';
 
 function restReducer<TData = unknown>(
   state: RequestStateType<TData>,
@@ -11,7 +11,7 @@ function restReducer<TData = unknown>(
   }
 ): RequestStateType<TData> {
   switch (type) {
-    case "response/state/save": {
+    case 'response/state/save': {
       return {
         ...state,
         response: payload,
@@ -20,7 +20,7 @@ function restReducer<TData = unknown>(
         isSuccess: true,
       };
     }
-    case "reset/loading":
+    case 'reset/loading':
       return {
         ...state,
         isLoading: true,
@@ -28,11 +28,11 @@ function restReducer<TData = unknown>(
         error: undefined,
         isSuccess: false,
       };
-    case "loading/start":
+    case 'loading/start':
       return { ...state, isLoading: true };
-    case "loading/stop":
+    case 'loading/stop':
       return { ...state, isLoading: false };
-    case "data/success":
+    case 'data/success':
       return {
         ...state,
         data: payload as TData,
@@ -40,7 +40,7 @@ function restReducer<TData = unknown>(
         isLoading: false,
         isSuccess: true,
       };
-    case "data/error":
+    case 'data/error':
       return {
         ...state,
         data: undefined as any,
@@ -48,11 +48,11 @@ function restReducer<TData = unknown>(
         isSuccess: false,
         isLoading: false,
       };
-    case "data/reset":
+    case 'data/reset':
       return { ...state, data: undefined as any };
-    case "error/reset":
+    case 'error/reset':
       return { ...state, error: undefined };
-    case "extra/save":
+    case 'extra/save':
       return {
         ...state,
         extra: payload,
@@ -61,9 +61,9 @@ function restReducer<TData = unknown>(
         response: undefined,
         isLoading: false,
       };
-    case "response/save":
+    case 'response/save':
       return { ...state, response: payload };
-    case "response/reset":
+    case 'response/reset':
       return { ...state, response: undefined };
     default:
       return state;

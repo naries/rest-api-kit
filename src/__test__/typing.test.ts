@@ -17,7 +17,7 @@ describe('Type Safety Tests', () => {
 
     const api = createRestBase({
       baseUrl: 'https://api.example.com',
-    }).createEndpoints((builder) => ({
+    }).createEndpoints(builder => ({
       getTodos: builder<Todo[], void>({
         url: '/todos',
         params: {
@@ -26,7 +26,7 @@ describe('Type Safety Tests', () => {
           saveToCache: true,
         },
       }),
-      
+
       createTodo: builder<Todo, CreateTodoRequest>({
         url: '/todos',
         params: {
@@ -38,8 +38,12 @@ describe('Type Safety Tests', () => {
     }));
 
     // Mock the hooks to test typing
-    const mockGetTodos = api.useGetTodos as jest.MockedFunction<typeof api.useGetTodos>;
-    const mockCreateTodo = api.useCreateTodo as jest.MockedFunction<typeof api.useCreateTodo>;
+    const mockGetTodos = api.useGetTodos as jest.MockedFunction<
+      typeof api.useGetTodos
+    >;
+    const mockCreateTodo = api.useCreateTodo as jest.MockedFunction<
+      typeof api.useCreateTodo
+    >;
 
     // Test that we can call the hooks
     expect(typeof api.useGetTodos).toBe('function');
@@ -56,7 +60,7 @@ describe('Type Safety Tests', () => {
       email: string;
     }
 
-    const api = createRestBase({}).createEndpoints((builder) => ({
+    const api = createRestBase({}).createEndpoints(builder => ({
       getProfile: builder<UserProfile, void>({
         url: '/profile',
         params: { method: 'GET' },

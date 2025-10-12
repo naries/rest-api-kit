@@ -1,18 +1,25 @@
-export type MethodType = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS";
+export type MethodType =
+  | 'GET'
+  | 'POST'
+  | 'PUT'
+  | 'PATCH'
+  | 'DELETE'
+  | 'HEAD'
+  | 'OPTIONS';
 
 export type RequestType = {
   url: string;
   method: MethodType;
   mode: RequestMode;
-  cache: "default" | "no-cache" | "reload" | "force-cache" | "only-if-cached";
-  credentials: "same-origin" | "include" | "omit";
-  redirect: "manual" | "follow" | "error";
-  referrerPolicy: "no-referrer" | "no-referrer-when-downgrade" | "origin";
+  cache: 'default' | 'no-cache' | 'reload' | 'force-cache' | 'only-if-cached';
+  credentials: 'same-origin' | 'include' | 'omit';
+  redirect: 'manual' | 'follow' | 'error';
+  referrerPolicy: 'no-referrer' | 'no-referrer-when-downgrade' | 'origin';
   body: Record<string, unknown>;
   headers: HeadersInit;
 };
 
-export type FetchApiRequestType = Omit<Partial<RequestType>, "body"> & {
+export type FetchApiRequestType = Omit<Partial<RequestType>, 'body'> & {
   body?: string;
 };
 export type RequestStateType<TData = unknown> = {
@@ -25,29 +32,29 @@ export type RequestStateType<TData = unknown> = {
 };
 
 export type ActionTypes =
-  | "loading/start"
-  | "loading/stop"
-  | "data/success"
-  | "data/error"
-  | "data/reset"
-  | "error/reset"
-  | "extra/save"
-  | "response/save"
-  | "response/reset"
-  | "reset/loading"
-  | "response/state/save";
+  | 'loading/start'
+  | 'loading/stop'
+  | 'data/success'
+  | 'data/error'
+  | 'data/reset'
+  | 'error/reset'
+  | 'extra/save'
+  | 'response/save'
+  | 'response/reset'
+  | 'reset/loading'
+  | 'response/state/save';
 
 export type QueryHookReturnType = [
   (body?: Record<string, string>) => void,
-  state: RequestStateType
+  state: RequestStateType,
 ];
 
 export type TypedQueryHookReturnType<TBody = void, TData = unknown> = [
   (body?: TBody) => void,
-  state: RequestStateType<TData>
+  state: RequestStateType<TData>,
 ];
 
-export type StoreActionType = "store/save" | "store/clear";
+export type StoreActionType = 'store/save' | 'store/clear';
 export type StoreStateType = Record<string, any>;
 
 export interface IOptions<R = any, T = any> {
@@ -104,7 +111,10 @@ export type RestBaseReturnType<T extends Record<string, any> = {}> = {
   ) => RestBaseReturnType<U>;
   endpoints: EndpointFix;
 } & {
-  [K in keyof T as `use${Capitalize<string & K>}`]: () => T[K] extends CompleteEndpointType<infer R, infer B> 
+  [K in keyof T as `use${Capitalize<string & K>}`]: () => T[K] extends CompleteEndpointType<
+    infer R,
+    infer B
+  >
     ? TypedQueryHookReturnType<B, R>
     : QueryHookReturnType;
 };

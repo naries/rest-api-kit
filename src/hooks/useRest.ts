@@ -1,4 +1,4 @@
-import React, { useReducer } from "react";
+import React, { useReducer } from 'react';
 import {
   ActionTypes,
   QueryHookReturnType,
@@ -7,19 +7,19 @@ import {
   RestOptionsType,
   IOptions,
   TypedQueryHookReturnType,
-} from "../types";
-import { makeRequest } from "../apifunctions";
+} from '../types';
+import { makeRequest } from '../apifunctions';
 import {
   applyChecks,
   clearMultipleIds,
   concatenateParamsWithUrl,
   getBaseUrl,
   load,
-} from "../helpers/misc";
+} from '../helpers/misc';
 
-import restReducer from "../lib/reducers/rest";
-import initRestState from "../lib/states/rest";
-import { useStore } from "./storeListener";
+import restReducer from '../lib/reducers/rest';
+import initRestState from '../lib/states/rest';
+import { useStore } from './storeListener';
 
 /**
  * @name useRest
@@ -56,23 +56,23 @@ export function useRest<TData = unknown, TBody = void>(
       const params = { ...paramsFromBase };
       // configure headers
       let headers = new Headers({
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
         ...paramsFromBase?.headers,
       });
       if (options?.prepareHeaders) {
         headers = options?.prepareHeaders(headers);
       }
-  const resolvedBaseUrl = getBaseUrl(url, options?.baseUrl);
+      const resolvedBaseUrl = getBaseUrl(url, options?.baseUrl);
 
       const formattedUrl =
-        params.method === "GET" || params.bodyAsParams
+        params.method === 'GET' || params.bodyAsParams
           ? concatenateParamsWithUrl(resolvedBaseUrl, body as {})
           : !!body && !!urlParams
-          ? concatenateParamsWithUrl(resolvedBaseUrl, urlParams)
-          : resolvedBaseUrl;
+            ? concatenateParamsWithUrl(resolvedBaseUrl, urlParams)
+            : resolvedBaseUrl;
 
       load(dispatch, formattedUrl, { ...params, headers }, body as {});
-      let storeIdentifier = `${options.baseUrl || ""}&${params.endpointName}`;
+      let storeIdentifier = `${options.baseUrl || ''}&${params.endpointName}`;
 
       // Check if preferCacheValue is set to true,
       // prevent making the actual api request.
@@ -85,28 +85,28 @@ export function useRest<TData = unknown, TBody = void>(
             { ...params, headers },
             cachedResult
           );
-          if (checkType === "error") {
+          if (checkType === 'error') {
             dispatch({
-              type: "data/error",
+              type: 'data/error',
               payload,
             });
             return;
           }
           dispatch({
-            type: "data/success",
+            type: 'data/success',
             payload,
           });
         }
       }
 
       // prepare
-      dispatch({ type: "data/reset" });
-      dispatch({ type: "error/reset" });
-      dispatch({ type: "loading/start" });
+      dispatch({ type: 'data/reset' });
+      dispatch({ type: 'error/reset' });
+      dispatch({ type: 'loading/start' });
 
       // make the request
       const response = await makeRequest(
-        params.method === "GET"
+        params.method === 'GET'
           ? formattedUrl
           : {
               url: formattedUrl,
@@ -118,8 +118,8 @@ export function useRest<TData = unknown, TBody = void>(
         headers
       );
 
-      if (response?.type === "error") {
-        dispatch({ type: "data/error", payload: response?.data });
+      if (response?.type === 'error') {
+        dispatch({ type: 'data/error', payload: response?.data });
         return;
       }
 
@@ -136,9 +136,9 @@ export function useRest<TData = unknown, TBody = void>(
       );
 
       // if error, send error to state
-      if (checkType === "error") {
+      if (checkType === 'error') {
         dispatch({
-          type: "data/error",
+          type: 'data/error',
           payload,
         });
         return;
@@ -146,26 +146,26 @@ export function useRest<TData = unknown, TBody = void>(
 
       // send the response to state
       dispatch({
-        type: "response/save",
+        type: 'response/save',
         payload: response?.data,
       });
 
       // send the success to state
       dispatch({
-        type: "data/success",
+        type: 'data/success',
         payload,
       });
 
       if (params.updates.length > 0) {
-        const normalized = params.updates.map((u) => u.toLowerCase());
-        clearMultipleIds(normalized, options.baseUrl || "", (id: string) =>
+        const normalized = params.updates.map(u => u.toLowerCase());
+        clearMultipleIds(normalized, options.baseUrl || '', (id: string) =>
           clearFromStore(id)
         );
       }
     } catch (error) {
-      dispatch({ type: "data/error", payload: error });
+      dispatch({ type: 'data/error', payload: error });
     } finally {
-      dispatch({ type: "loading/stop" });
+      dispatch({ type: 'loading/stop' });
     }
   };
 

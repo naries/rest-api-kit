@@ -1,4 +1,4 @@
-import { RequestStateType } from "../../types";
+import { RequestStateType } from '../../types';
 
 const initRestState: RequestStateType<any> = {
   isLoading: false,
@@ -9,12 +9,12 @@ const initRestState: RequestStateType<any> = {
   extra: {
     body: {},
     isFired: false,
-    url: "",
+    url: '',
     preferCachevalue: false,
     updates: [],
-    method: "GET",
+    method: 'GET',
     saveToCache: false,
-    endpointName: "",
+    endpointName: '',
   },
 };
 

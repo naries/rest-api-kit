@@ -4,10 +4,10 @@
 
 We actively support the following versions of rest-api-kit:
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 0.0.53+ | :white_check_mark: |
-| < 0.0.53| :x:                |
+| Version  | Supported          |
+| -------- | ------------------ |
+| 0.0.53+  | :white_check_mark: |
+| < 0.0.53 | :x:                |
 
 ## Reporting a Vulnerability
 
@@ -35,18 +35,20 @@ We take security vulnerabilities seriously. If you discover a security vulnerabi
 When using rest-api-kit:
 
 1. **Secure Token Storage**
+
    ```typescript
    // ✅ Good: Secure storage
    const token = await SecureStore.getItemAsync('authToken');
-   
+
    // ❌ Avoid: Plain text storage
    const token = localStorage.getItem('authToken');
    ```
 
 2. **Input Validation**
+
    ```typescript
    // ✅ Good: Validate inputs
-   const validateData = (data) => {
+   const validateData = data => {
      if (!data || typeof data !== 'object') {
        throw new Error('Invalid data format');
      }
@@ -55,10 +57,11 @@ When using rest-api-kit:
    ```
 
 3. **HTTPS Only**
+
    ```typescript
    // ✅ Good: Always use HTTPS
    const api = createRestBase({
-     baseUrl: 'https://secure-api.com'
+     baseUrl: 'https://secure-api.com',
    });
    ```
 
@@ -84,6 +87,7 @@ We follow responsible disclosure practices:
 ## Contact
 
 For security-related questions or concerns:
+
 - Email: security@rest-api-kit.dev
 - GitHub: Create a private vulnerability report
 

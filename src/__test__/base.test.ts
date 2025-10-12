@@ -4,15 +4,12 @@ describe('createRestBase direct hook access', () => {
   it('should allow direct access to hooks on the API object', () => {
     const api = createRestBase({
       baseUrl: 'https://api.example.com',
-      prepareHeaders: (headers) => {
+      prepareHeaders: headers => {
         headers.set('Authorization', 'Bearer token');
         return headers;
       },
-    }).createEndpoints((builder) => ({
-      getUser: builder<
-        { id: number; name: string },
-        void
-      >({
+    }).createEndpoints(builder => ({
+      getUser: builder<{ id: number; name: string }, void>({
         url: '/user',
         params: {
           method: 'GET',
@@ -37,61 +34,96 @@ describe('createRestBase direct hook access', () => {
     // Verify hooks are directly accessible
     expect(typeof api.useGetUser).toBe('function');
     expect(typeof api.useCreatePost).toBe('function');
-    
+
     // Verify endpoints are still accessible
     expect(api.endpoints).toBeDefined();
     expect(typeof api.createEndpoints).toBe('function');
   });
 
-  it('should initialize endpoints only once per app lifecycle', () => {
-    const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
-    
-    const baseApi = createRestBase({
+  it('should allow multiple createEndpoints calls for organizing APIs', () => {
+    const api = createRestBase({
       baseUrl: 'https://api.example.com',
+      prepareHeaders: headers => headers,
     });
 
-    // First call should initialize
-    const api1 = baseApi.createEndpoints((builder) => ({
-      endpoint1: builder({ url: '/test1', params: { method: 'GET' } }),
+    // First set of endpoints (auth)
+    const authApi = api.createEndpoints(builder => ({
+      login: builder({
+        url: '/auth/login',
+        params: { method: 'POST' },
+      }),
+      logout: builder({
+        url: '/auth/logout',
+        params: { method: 'POST' },
+      }),
     }));
 
-    // Second call should warn and reuse existing endpoints
-    const api2 = baseApi.createEndpoints((builder) => ({
-      endpoint2: builder({ url: '/test2', params: { method: 'GET' } }),
+    // Second set of endpoints (users)
+    const userApi = api.createEndpoints(builder => ({
+      getUser: builder({
+        url: '/users',
+        params: { method: 'GET' },
+      }),
+      updateUser: builder({
+        url: '/users',
+        params: { method: 'PUT' },
+      }),
+    }));
+
+    // Both sets of hooks should be available on the second call
+    expect(typeof authApi.useLogin).toBe('function');
+    expect(typeof authApi.useLogout).toBe('function');
+
+    // userApi should have all hooks (from both calls)
+    expect(typeof (userApi as any).useLogin).toBe('function');
+    expect(typeof (userApi as any).useLogout).toBe('function');
+    expect(typeof userApi.useGetUser).toBe('function');
+    expect(typeof userApi.useUpdateUser).toBe('function');
+
+    // All endpoints should be accumulated
+    expect(Object.keys(userApi.endpoints)).toHaveLength(4);
+  });
+
+  it('should warn when duplicate endpoint names are used', () => {
+    const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+    const api = createRestBase({
+      baseUrl: 'https://api.example.com',
+      prepareHeaders: headers => headers,
+    });
+
+    // First call
+    api.createEndpoints(builder => ({
+      getUser: builder({ url: '/users/1', params: { method: 'GET' } }),
+    }));
+
+    // Second call with duplicate endpoint name
+    api.createEndpoints(builder => ({
+      getUser: builder({ url: '/users/2', params: { method: 'GET' } }),
     }));
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      'rest-api-kit: createEndpoints called multiple times. ' +
-      'Endpoints should be created once at app initialization. ' +
-      'Using previously initialized endpoints.'
+      expect.stringContaining('Duplicate endpoint names detected: getUser')
     );
-
-    // Both should have the same hooks from the first initialization
-    expect(typeof api1.useEndpoint1).toBe('function');
-    expect(typeof (api2 as any).useEndpoint1).toBe('function');
-    
-    // The second endpoint should NOT be available since it wasn't in the first call
-    expect((api1 as any).useEndpoint2).toBeUndefined();
-    expect((api2 as any).useEndpoint2).toBeUndefined();
 
     consoleSpy.mockRestore();
   });
 
   it('should handle edge cases like empty endpoint names', () => {
-    const api = createRestBase({}).createEndpoints((builder) => ({}));
-    
+    const api = createRestBase({}).createEndpoints(builder => ({}));
+
     // Should not break with empty endpoints
     expect(api.endpoints).toBeDefined();
     expect(typeof api.createEndpoints).toBe('function');
   });
 
   it('should handle special characters in endpoint names', () => {
-    const api = createRestBase({}).createEndpoints((builder) => ({
+    const api = createRestBase({}).createEndpoints(builder => ({
       'get-user-profile': builder({
         url: '/user-profile',
         params: { method: 'GET' },
       }),
-      'create_post': builder({
+      create_post: builder({
         url: '/posts',
         params: { method: 'POST' },
       }),
@@ -105,7 +137,7 @@ describe('createRestBase direct hook access', () => {
   it('should memoize hook configurations to prevent recreation', () => {
     const api = createRestBase({
       baseUrl: 'https://api.example.com',
-    }).createEndpoints((builder) => ({
+    }).createEndpoints(builder => ({
       testEndpoint: builder({
         url: '/test',
         params: { method: 'GET' },

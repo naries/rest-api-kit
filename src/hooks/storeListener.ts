@@ -1,15 +1,25 @@
-import React, { useCallback, useReducer, useRef, useMemo } from "react";
-import { deleteId } from "../helpers/misc";
-import initStoreState from "../lib/states/store";
-import { IOptions, StoreActionType, StoreStateType } from "../types";
+import React, { useCallback, useReducer, useRef, useMemo } from 'react';
+import { deleteId } from '../helpers/misc';
+import initStoreState from '../lib/states/store';
+import { IOptions, StoreActionType, StoreStateType } from '../types';
 
 // Enhanced action types for better store management
-export type EnhancedStoreAction = 
-  | { type: "store/save"; payload: { id: string; data: unknown; options?: IOptions<any, any> } }
-  | { type: "store/clear"; payload: { id: string } }
-  | { type: "store/update"; payload: { id: string; data: Partial<unknown>; options?: IOptions<any, any> } }
-  | { type: "store/clearAll"; payload?: {} }
-  | { type: "store/batch"; payload: { operations: EnhancedStoreAction[] } };
+export type EnhancedStoreAction =
+  | {
+      type: 'store/save';
+      payload: { id: string; data: unknown; options?: IOptions<any, any> };
+    }
+  | { type: 'store/clear'; payload: { id: string } }
+  | {
+      type: 'store/update';
+      payload: {
+        id: string;
+        data: Partial<unknown>;
+        options?: IOptions<any, any>;
+      };
+    }
+  | { type: 'store/clearAll'; payload?: {} }
+  | { type: 'store/batch'; payload: { operations: EnhancedStoreAction[] } };
 
 // Store event types for enhanced listening
 export type StoreEvent = {
@@ -46,19 +56,23 @@ function storeReducer(
 ): StoreStateType {
   try {
     switch (action.type) {
-      case "store/save":
+      case 'store/save':
         return {
           ...state,
           [action.payload.id]: action.payload.data,
         };
-      
-      case "store/clear":
+
+      case 'store/clear':
         const currentState = { ...state };
         return deleteId(currentState, action.payload.id);
-      
-      case "store/update":
+
+      case 'store/update':
         const existingData = state[action.payload.id];
-        if (existingData && typeof existingData === 'object' && typeof action.payload.data === 'object') {
+        if (
+          existingData &&
+          typeof existingData === 'object' &&
+          typeof action.payload.data === 'object'
+        ) {
           return {
             ...state,
             [action.payload.id]: { ...existingData, ...action.payload.data },
@@ -69,16 +83,16 @@ function storeReducer(
           ...state,
           [action.payload.id]: action.payload.data,
         };
-      
-      case "store/clearAll":
+
+      case 'store/clearAll':
         return {};
-      
-      case "store/batch":
+
+      case 'store/batch':
         return action.payload.operations.reduce(
           (currentState, operation) => storeReducer(currentState, operation),
           state
         );
-      
+
       default:
         if (process.env.NODE_ENV !== 'production') {
           console.warn(`Unknown store action type: ${(action as any).type}`);
@@ -103,11 +117,16 @@ const store = (() => {
   }> = [];
   let middlewares: StoreMiddleware[] = [];
   let isDispatching = false;
-  let actionHistory: Array<{ action: EnhancedStoreAction; timestamp: number; state: StoreStateType }> = [];
+  let actionHistory: Array<{
+    action: EnhancedStoreAction;
+    timestamp: number;
+    state: StoreStateType;
+  }> = [];
   const maxHistorySize = 50;
 
   // DevTools integration (if available)
-  const devTools = typeof window !== 'undefined' && 
+  const devTools =
+    typeof window !== 'undefined' &&
     (window as any).__REDUX_DEVTOOLS_EXTENSION__;
 
   const getState = (): StoreStateType => state;
@@ -122,7 +141,7 @@ const store = (() => {
     try {
       isDispatching = true;
       const previousState = state;
-      
+
       // Apply middlewares
       let currentIndex = 0;
       const next = (actionToDispatch: EnhancedStoreAction) => {
@@ -132,14 +151,14 @@ const store = (() => {
         } else {
           // Final reducer call
           state = storeReducer(state, actionToDispatch);
-          
+
           // Add to history
           actionHistory.push({
             action: actionToDispatch,
             timestamp: Date.now(),
-            state: { ...state }
+            state: { ...state },
           });
-          
+
           // Maintain history size
           if (actionHistory.length > maxHistorySize) {
             actionHistory.shift();
@@ -188,7 +207,7 @@ const store = (() => {
 
           const storeEvent: StoreEvent = {
             type: actionToDispatch.type.split('/')[1] as StoreEvent['type'],
-            payload: getEventPayload(actionToDispatch)
+            payload: getEventPayload(actionToDispatch),
           };
 
           // Notify listeners with optimized updates
@@ -196,10 +215,10 @@ const store = (() => {
             try {
               if (options?.selector) {
                 const newValue = options.selector(state);
-                const hasChanged = options.equalityFn 
+                const hasChanged = options.equalityFn
                   ? !options.equalityFn(lastValue, newValue)
                   : lastValue !== newValue;
-                
+
                 if (hasChanged || options.immediate) {
                   listeners[index].lastValue = newValue;
                   callback(storeEvent);
@@ -223,15 +242,15 @@ const store = (() => {
   };
 
   const subscribe = (
-    listener: (event: StoreEvent) => void, 
+    listener: (event: StoreEvent) => void,
     options?: SubscriptionOptions
   ) => {
     const listenerObject = {
       callback: listener,
       options,
-      lastValue: options?.selector ? options.selector(state) : undefined
+      lastValue: options?.selector ? options.selector(state) : undefined,
     };
-    
+
     listeners.push(listenerObject);
 
     // Call immediately if requested
@@ -241,7 +260,7 @@ const store = (() => {
           type: 'change',
           payload: {
             timestamp: Date.now(),
-          }
+          },
         });
       } catch (error) {
         if (process.env.NODE_ENV !== 'production') {
@@ -252,7 +271,7 @@ const store = (() => {
 
     // Return unsubscribe function
     return () => {
-      listeners = listeners.filter((l) => l !== listenerObject);
+      listeners = listeners.filter(l => l !== listenerObject);
     };
   };
 
@@ -322,51 +341,53 @@ const store = (() => {
 export const storeMethods = {
   save: (id: string, data: unknown, options?: IOptions<any, any>) =>
     store.dispatch({
-      type: "store/save",
+      type: 'store/save',
       payload: { id, data, options },
     }),
-  
+
   update: (id: string, data: Partial<unknown>, options?: IOptions<any, any>) =>
     store.dispatch({
-      type: "store/update",
+      type: 'store/update',
       payload: { id, data, options },
     }),
-  
+
   get: (id: string) => store.getState()[id],
-  
+
   getAll: () => store.getState(),
-  
+
   clear: (id: string) =>
     store.dispatch({
-      type: "store/clear",
+      type: 'store/clear',
       payload: { id },
     }),
-  
+
   clearAll: () =>
     store.dispatch({
-      type: "store/clearAll",
+      type: 'store/clearAll',
       payload: {},
     }),
-  
+
   batch: (operations: EnhancedStoreAction[]) =>
     store.dispatch({
-      type: "store/batch",
+      type: 'store/batch',
       payload: { operations },
     }),
-  
+
   // Advanced operations
   select: <T>(selector: StoreSelector<T>) => selector(store.getState()),
-  
-  subscribe: (listener: (event: StoreEvent) => void, options?: SubscriptionOptions) =>
-    store.subscribe(listener, options),
-  
+
+  subscribe: (
+    listener: (event: StoreEvent) => void,
+    options?: SubscriptionOptions
+  ) => store.subscribe(listener, options),
+
   addMiddleware: store.addMiddleware,
   removeMiddleware: store.removeMiddleware,
-  
+
   // Persistence
   saveToStorage: store.saveToStorage,
   loadFromStorage: store.loadFromStorage,
-  
+
   // Debugging
   getHistory: store.getHistory,
   clearHistory: store.clearHistory,
@@ -381,16 +402,16 @@ export function useStore<R = any, T = any>() {
   // Subscribe to the store and trigger re-render only when necessary
   React.useEffect(() => {
     isMountedRef.current = true;
-    
+
     const unsubscribe = store.subscribe((event: StoreEvent) => {
       // Only update if component is still mounted
       if (isMountedRef.current) {
         forceUpdate();
       }
     });
-    
+
     subscriptionRef.current = unsubscribe;
-    
+
     return () => {
       isMountedRef.current = false;
       if (subscriptionRef.current) {
@@ -410,7 +431,7 @@ export function useStore<R = any, T = any>() {
   const save = useCallback(
     (id: string, data: unknown, options?: IOptions<any, any>) => {
       store.dispatch({
-        type: "store/save",
+        type: 'store/save',
         payload: { id, data, options },
       });
     },
@@ -420,7 +441,7 @@ export function useStore<R = any, T = any>() {
   const update = useCallback(
     (id: string, data: Partial<unknown>, options?: IOptions<any, any>) => {
       store.dispatch({
-        type: "store/update",
+        type: 'store/update',
         payload: { id, data, options },
       });
     },
@@ -433,40 +454,43 @@ export function useStore<R = any, T = any>() {
 
   const clear = useCallback((id: string) => {
     store.dispatch({
-      type: "store/clear",
+      type: 'store/clear',
       payload: { id },
     });
   }, []);
 
   const clearAll = useCallback(() => {
     store.dispatch({
-      type: "store/clearAll",
+      type: 'store/clearAll',
       payload: {},
     });
   }, []);
 
   const batch = useCallback((operations: EnhancedStoreAction[]) => {
     store.dispatch({
-      type: "store/batch",
+      type: 'store/batch',
       payload: { operations },
     });
   }, []);
 
   // Advanced selector with memoization
-  const select = useCallback(<TSelected>(
-    selector: StoreSelector<TSelected>,
-    equalityFn?: (a: TSelected, b: TSelected) => boolean
-  ): TSelected => {
-    return selector(store.getState());
-  }, []);
+  const select = useCallback(
+    <TSelected>(
+      selector: StoreSelector<TSelected>,
+      equalityFn?: (a: TSelected, b: TSelected) => boolean
+    ): TSelected => {
+      return selector(store.getState());
+    },
+    []
+  );
 
   // Selective subscription
-  const subscribe = useCallback((
-    listener: (event: StoreEvent) => void,
-    options?: SubscriptionOptions
-  ) => {
-    return store.subscribe(listener, options);
-  }, []);
+  const subscribe = useCallback(
+    (listener: (event: StoreEvent) => void, options?: SubscriptionOptions) => {
+      return store.subscribe(listener, options);
+    },
+    []
+  );
 
   // Persistence methods
   const saveToStorage = useCallback((key?: string) => {
@@ -487,23 +511,23 @@ export function useStore<R = any, T = any>() {
       clearAll,
       batch,
       getAll: store.getState,
-      
+
       // Advanced operations
       select,
       subscribe,
-      
+
       // Persistence
       saveToStorage,
       loadFromStorage,
-      
+
       // Middleware
       addMiddleware: store.addMiddleware,
       removeMiddleware: store.removeMiddleware,
-      
+
       // Debugging and dev tools
       getHistory: store.getHistory,
       clearHistory: store.clearHistory,
-      
+
       // Store state helpers
       isEmpty: () => Object.keys(store.getState()).length === 0,
       size: () => Object.keys(store.getState()).length,
@@ -512,7 +536,18 @@ export function useStore<R = any, T = any>() {
       values: () => Object.values(store.getState()),
       entries: () => Object.entries(store.getState()),
     }),
-    [save, update, get, clear, clearAll, batch, select, subscribe, saveToStorage, loadFromStorage]
+    [
+      save,
+      update,
+      get,
+      clear,
+      clearAll,
+      batch,
+      select,
+      subscribe,
+      saveToStorage,
+      loadFromStorage,
+    ]
   );
 }
 
@@ -521,18 +556,22 @@ export function useStoreSelector<T>(
   selector: StoreSelector<T>,
   equalityFn?: (a: T, b: T) => boolean
 ): T {
-  const [selectedState, setSelectedState] = React.useState(() => selector(store.getState()));
+  const [selectedState, setSelectedState] = React.useState(() =>
+    selector(store.getState())
+  );
   const isMountedRef = useRef(true);
 
   React.useEffect(() => {
     isMountedRef.current = true;
-    
+
     const unsubscribe = store.subscribe(
       () => {
         if (isMountedRef.current) {
           const newState = selector(store.getState());
           setSelectedState(prevState => {
-            const hasChanged = equalityFn ? !equalityFn(prevState, newState) : prevState !== newState;
+            const hasChanged = equalityFn
+              ? !equalityFn(prevState, newState)
+              : prevState !== newState;
             return hasChanged ? newState : prevState;
           });
         }

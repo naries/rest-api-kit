@@ -22,10 +22,10 @@ const getReactMinorVersion = (): number => {
 const supportsHooks = (): boolean => {
   const major = getReactMajorVersion();
   const minor = getReactMinorVersion();
-  
+
   if (major > 16) return true;
   if (major === 16 && minor >= 8) return true;
-  
+
   // Also check if hooks exist on React object
   return !!(
     typeof React.useState === 'function' &&
@@ -37,35 +37,35 @@ const supportsHooks = (): boolean => {
 const hasHooks = supportsHooks();
 
 // Export React hooks with fallbacks for older versions
-export const useStateCompat = hasHooks 
-  ? React.useState 
+export const useStateCompat = hasHooks
+  ? React.useState
   : () => {
-      throw new Error('rest-api-kit requires React 16.8+ for hooks support. Please upgrade React or use class components with connect HOC.');
+      throw new Error(
+        'rest-api-kit requires React 16.8+ for hooks support. Please upgrade React or use class components with connect HOC.'
+      );
     };
 
-export const useEffectCompat = hasHooks 
-  ? React.useEffect 
+export const useEffectCompat = hasHooks
+  ? React.useEffect
   : () => {
-      throw new Error('rest-api-kit requires React 16.8+ for hooks support. Please upgrade React or use class components with connect HOC.');
+      throw new Error(
+        'rest-api-kit requires React 16.8+ for hooks support. Please upgrade React or use class components with connect HOC.'
+      );
     };
 
-export const useReducerCompat = hasHooks 
-  ? React.useReducer 
+export const useReducerCompat = hasHooks
+  ? React.useReducer
   : () => {
-      throw new Error('rest-api-kit requires React 16.8+ for hooks support. Please upgrade React or use class components with connect HOC.');
+      throw new Error(
+        'rest-api-kit requires React 16.8+ for hooks support. Please upgrade React or use class components with connect HOC.'
+      );
     };
 
-export const useCallbackCompat = hasHooks 
-  ? React.useCallback 
-  : (fn: any) => fn;
+export const useCallbackCompat = hasHooks ? React.useCallback : (fn: any) => fn;
 
-export const useMemoCompat = hasHooks 
-  ? React.useMemo 
-  : (fn: any) => fn();
+export const useMemoCompat = hasHooks ? React.useMemo : (fn: any) => fn();
 
-export const useRefCompat = hasHooks 
-  ? React.useRef 
-  : () => ({ current: null });
+export const useRefCompat = hasHooks ? React.useRef : () => ({ current: null });
 
 // Version detection
 export const getReactVersion = () => {
@@ -89,8 +89,10 @@ export const assertReactSupport = () => {
   if (!hasHooks) {
     throw new Error(
       'rest-api-kit requires React 16.8 or higher for hooks support. ' +
-      'Current React version: ' + getReactVersion() + '. ' +
-      'Please upgrade React to use this library.'
+        'Current React version: ' +
+        getReactVersion() +
+        '. ' +
+        'Please upgrade React to use this library.'
     );
   }
 };

@@ -1,5 +1,11 @@
 import { renderHook, act } from '@testing-library/react-hooks';
-import { useStore, useStoreSelector, useStoreEvents, storeMethods, StoreEvent } from '../../hooks/storeListener';
+import {
+  useStore,
+  useStoreSelector,
+  useStoreEvents,
+  storeMethods,
+  StoreEvent,
+} from '../../hooks/storeListener';
 
 // Mock console methods to avoid noise in tests
 const originalConsole = console;
@@ -23,7 +29,7 @@ describe('storeListener', () => {
   describe('useStore hook', () => {
     it('should save and retrieve data', () => {
       const { result } = renderHook(() => useStore());
-      
+
       act(() => {
         result.current.save('test-id', { message: 'hello' });
       });
@@ -34,7 +40,7 @@ describe('storeListener', () => {
 
     it('should update existing data', () => {
       const { result } = renderHook(() => useStore());
-      
+
       act(() => {
         result.current.save('test-id', { name: 'John', age: 30 });
       });
@@ -49,7 +55,7 @@ describe('storeListener', () => {
 
     it('should clear specific data', () => {
       const { result } = renderHook(() => useStore());
-      
+
       act(() => {
         result.current.save('test-id-1', 'data1');
         result.current.save('test-id-2', 'data2');
@@ -65,7 +71,7 @@ describe('storeListener', () => {
 
     it('should clear all data', () => {
       const { result } = renderHook(() => useStore());
-      
+
       act(() => {
         result.current.save('test-id-1', 'data1');
         result.current.save('test-id-2', 'data2');
@@ -80,12 +86,15 @@ describe('storeListener', () => {
 
     it('should perform batch operations', () => {
       const { result } = renderHook(() => useStore());
-      
+
       act(() => {
         result.current.batch([
           { type: 'store/save', payload: { id: 'id1', data: 'data1' } },
           { type: 'store/save', payload: { id: 'id2', data: 'data2' } },
-          { type: 'store/update', payload: { id: 'id1', data: { updated: true } } }
+          {
+            type: 'store/update',
+            payload: { id: 'id1', data: { updated: true } },
+          },
         ]);
       });
 
@@ -95,7 +104,7 @@ describe('storeListener', () => {
 
     it('should provide store utility methods', () => {
       const { result } = renderHook(() => useStore());
-      
+
       expect(result.current.isEmpty()).toBe(true);
       expect(result.current.size()).toBe(0);
 
@@ -110,12 +119,15 @@ describe('storeListener', () => {
       expect(result.current.has('nonexistent')).toBe(false);
       expect(result.current.keys()).toEqual(['test1', 'test2']);
       expect(result.current.values()).toEqual(['data1', 'data2']);
-      expect(result.current.entries()).toEqual([['test1', 'data1'], ['test2', 'data2']]);
+      expect(result.current.entries()).toEqual([
+        ['test1', 'data1'],
+        ['test2', 'data2'],
+      ]);
     });
 
     it('should use selector with memoization', () => {
       const { result } = renderHook(() => useStore());
-      
+
       act(() => {
         result.current.save('user', { name: 'John', age: 30 });
       });
@@ -129,7 +141,7 @@ describe('storeListener', () => {
     it('should select specific data and update only when selection changes', () => {
       const selector = (state: any) => state.user?.name;
       const { result } = renderHook(() => useStoreSelector(selector));
-      
+
       expect(result.current).toBeUndefined();
 
       act(() => {
@@ -156,9 +168,11 @@ describe('storeListener', () => {
     it('should use custom equality function', () => {
       const selector = (state: any) => state.items || [];
       const equalityFn = (a: any[], b: any[]) => a.length === b.length;
-      
-      const { result } = renderHook(() => useStoreSelector(selector, equalityFn));
-      
+
+      const { result } = renderHook(() =>
+        useStoreSelector(selector, equalityFn)
+      );
+
       act(() => {
         storeMethods.save('items', [1, 2, 3]);
       });
@@ -185,7 +199,7 @@ describe('storeListener', () => {
   describe('useStoreEvents hook', () => {
     it('should listen to store events', () => {
       const eventListener = jest.fn();
-      
+
       renderHook(() => useStoreEvents(eventListener));
 
       act(() => {
@@ -206,7 +220,7 @@ describe('storeListener', () => {
 
     it('should handle immediate option', () => {
       const eventListener = jest.fn();
-      
+
       renderHook(() => useStoreEvents(eventListener, { immediate: true }));
 
       expect(eventListener).toHaveBeenCalledWith(
@@ -223,10 +237,10 @@ describe('storeListener', () => {
   describe('storeMethods', () => {
     it('should provide direct store access', () => {
       storeMethods.save('direct-test', { value: 123 });
-      
+
       expect(storeMethods.get('direct-test')).toEqual({ value: 123 });
       expect(storeMethods.getAll()).toEqual({ 'direct-test': { value: 123 } });
-      
+
       storeMethods.clear('direct-test');
       expect(storeMethods.get('direct-test')).toBeUndefined();
     });
@@ -265,7 +279,7 @@ describe('storeListener', () => {
     // Skip persistence tests in Node environment since they require browser APIs
     it('should handle localStorage unavailability gracefully', () => {
       const { result } = renderHook(() => useStore());
-      
+
       act(() => {
         result.current.save('persist-test', 'data');
       });
@@ -282,11 +296,11 @@ describe('storeListener', () => {
   describe('error handling', () => {
     it('should handle invalid actions gracefully', () => {
       const { result } = renderHook(() => useStore());
-      
+
       // This should not crash the store
       act(() => {
         result.current.batch([
-          { type: 'invalid-action' as any, payload: { id: 'test' } }
+          { type: 'invalid-action' as any, payload: { id: 'test' } },
         ]);
       });
 
@@ -302,7 +316,7 @@ describe('storeListener', () => {
       const errorListener = jest.fn(() => {
         throw new Error('Listener error');
       });
-      
+
       renderHook(() => useStoreEvents(errorListener));
 
       // This should not crash the store

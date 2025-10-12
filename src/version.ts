@@ -18,7 +18,8 @@ export const FEATURES = {
 export const ENVIRONMENT = {
   IS_BROWSER: typeof window !== 'undefined',
   IS_NODE: typeof process !== 'undefined' && process.versions?.node,
-  IS_REACT_NATIVE: typeof navigator !== 'undefined' && navigator.product === 'ReactNative',
+  IS_REACT_NATIVE:
+    typeof navigator !== 'undefined' && navigator.product === 'ReactNative',
   IS_DEV: process.env.NODE_ENV === 'development',
   IS_PROD: process.env.NODE_ENV === 'production',
 } as const;
@@ -30,7 +31,10 @@ export const getRuntimeInfo = () => {
     // Try to detect React version safely
     if (typeof window !== 'undefined' && (window as any).React?.version) {
       reactVersion = (window as any).React.version;
-    } else if (typeof global !== 'undefined' && (global as any).React?.version) {
+    } else if (
+      typeof global !== 'undefined' &&
+      (global as any).React?.version
+    ) {
       reactVersion = (global as any).React.version;
     }
   } catch {

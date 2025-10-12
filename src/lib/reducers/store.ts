@@ -1,5 +1,5 @@
-import { deleteId } from "../../helpers/misc";
-import { IOptions, StoreActionType, StoreStateType } from "../../types";
+import { deleteId } from '../../helpers/misc';
+import { IOptions, StoreActionType, StoreStateType } from '../../types';
 
 function storeReducer(
   state: StoreStateType,
@@ -16,16 +16,16 @@ function storeReducer(
   }
 ) {
   switch (type) {
-    case "store/save":
+    case 'store/save':
       return {
         ...state,
         store: { ...state.store, [payload.id]: payload.data },
       };
-    case "store/clear":
+    case 'store/clear':
       let currentState = { ...state };
       return deleteId(currentState, payload.id);
     default:
-      return "Unrecognized command";
+      return 'Unrecognized command';
   }
 }
 

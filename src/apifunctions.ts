@@ -1,4 +1,4 @@
-import { FetchApiRequestType, MethodType, RequestType } from "./types";
+import { FetchApiRequestType, MethodType, RequestType } from './types';
 
 // Enhanced types for better error handling and response management
 export interface ApiResponse<T = any> {
@@ -79,9 +79,11 @@ export class ApiClient {
   }
 
   // Execute request interceptors
-  private async executeRequestInterceptors(config: RequestConfig): Promise<RequestConfig> {
+  private async executeRequestInterceptors(
+    config: RequestConfig
+  ): Promise<RequestConfig> {
     let finalConfig = config;
-    
+
     for (const interceptor of this.requestInterceptors) {
       if (interceptor.onRequest) {
         try {
@@ -94,14 +96,16 @@ export class ApiClient {
         }
       }
     }
-    
+
     return finalConfig;
   }
 
   // Execute response interceptors
-  private async executeResponseInterceptors(response: ApiResponse): Promise<ApiResponse> {
+  private async executeResponseInterceptors(
+    response: ApiResponse
+  ): Promise<ApiResponse> {
     let finalResponse = response;
-    
+
     for (const interceptor of this.responseInterceptors) {
       if (interceptor.onResponse) {
         try {
@@ -114,27 +118,27 @@ export class ApiClient {
         }
       }
     }
-    
+
     return finalResponse;
   }
 
   // Create timeout controller
   private createTimeoutController(timeout?: number): AbortController {
     const controller = new AbortController();
-    
+
     if (timeout && timeout > 0) {
       setTimeout(() => {
         controller.abort();
       }, timeout);
     }
-    
+
     return controller;
   }
 
   // Calculate retry delay
   private calculateRetryDelay(attempt: number, config: RetryConfig): number {
     const { retryDelay, retryDelayType = 'fixed' } = config;
-    
+
     switch (retryDelayType) {
       case 'exponential':
         return retryDelay * Math.pow(2, attempt);
@@ -147,19 +151,23 @@ export class ApiClient {
   }
 
   // Check if error should trigger retry
-  private shouldRetry(error: any, attempt: number, config: RetryConfig): boolean {
+  private shouldRetry(
+    error: any,
+    attempt: number,
+    config: RetryConfig
+  ): boolean {
     if (attempt >= config.retries) return false;
-    
+
     if (config.retryCondition) {
       return config.retryCondition(error);
     }
-    
+
     // Default retry conditions
     if (error.name === 'AbortError') return false; // Don't retry timeouts
-    if (error.name === 'TypeError') return true;   // Network errors
-    if (error.status >= 500) return true;          // Server errors
-    if (error.status === 429) return true;         // Rate limiting
-    
+    if (error.name === 'TypeError') return true; // Network errors
+    if (error.status >= 500) return true; // Server errors
+    if (error.status === 429) return true; // Rate limiting
+
     return false;
   }
 
@@ -171,7 +179,7 @@ export class ApiClient {
   // Enhanced request method with full feature set
   async request<T = any>(config: RequestConfig): Promise<ApiResponse<T>> {
     const startTime = Date.now();
-    
+
     // Merge with default config
     const finalConfig: RequestConfig = {
       ...this.defaultConfig,
@@ -179,7 +187,8 @@ export class ApiClient {
     };
 
     // Execute request interceptors
-    const interceptedConfig = await this.executeRequestInterceptors(finalConfig);
+    const interceptedConfig =
+      await this.executeRequestInterceptors(finalConfig);
 
     // Setup retry configuration
     const retryConfig: RetryConfig = {
@@ -190,14 +199,15 @@ export class ApiClient {
     };
 
     let lastError: any;
-    
+
     // Retry loop
     for (let attempt = 0; attempt <= retryConfig.retries; attempt++) {
       try {
         // Create timeout controller if not provided
-        const timeoutController = interceptedConfig.signal ? 
-          null : this.createTimeoutController(interceptedConfig.timeout);
-        
+        const timeoutController = interceptedConfig.signal
+          ? null
+          : this.createTimeoutController(interceptedConfig.timeout);
+
         const signal = interceptedConfig.signal || timeoutController?.signal;
 
         // Prepare request parameters
@@ -213,24 +223,33 @@ export class ApiClient {
         };
 
         // Add body for non-GET requests
-        if (interceptedConfig.method && interceptedConfig.method !== 'GET' && interceptedConfig.body) {
+        if (
+          interceptedConfig.method &&
+          interceptedConfig.method !== 'GET' &&
+          interceptedConfig.body
+        ) {
           let transformedBody = interceptedConfig.body;
-          
+
           // Apply request transformation
           if (interceptedConfig.transformRequest) {
-            transformedBody = interceptedConfig.transformRequest(transformedBody);
+            transformedBody =
+              interceptedConfig.transformRequest(transformedBody);
           }
-          
+
           // Handle different body types
-          if (typeof transformedBody === 'object' && transformedBody !== null && 
-              !((transformedBody as any) instanceof FormData)) {
+          if (
+            typeof transformedBody === 'object' &&
+            transformedBody !== null &&
+            !((transformedBody as any) instanceof FormData)
+          ) {
             requestParams.body = JSON.stringify(transformedBody);
             // Ensure Content-Type is set for JSON
             if (!requestParams.headers) {
               requestParams.headers = {};
             }
             if (!(requestParams.headers as any)['Content-Type']) {
-              (requestParams.headers as any)['Content-Type'] = 'application/json';
+              (requestParams.headers as any)['Content-Type'] =
+                'application/json';
             }
           } else {
             requestParams.body = transformedBody as BodyInit;
@@ -238,13 +257,16 @@ export class ApiClient {
         }
 
         // Make the actual request
-        const response = await fetch(interceptedConfig.url || '', requestParams);
-        
+        const response = await fetch(
+          interceptedConfig.url || '',
+          requestParams
+        );
+
         // Calculate duration
         const duration = Date.now() - startTime;
 
         // Validate status
-        const isValidStatus = interceptedConfig.validateStatus 
+        const isValidStatus = interceptedConfig.validateStatus
           ? interceptedConfig.validateStatus(response.status)
           : response.status >= 200 && response.status < 300;
 
@@ -273,26 +295,33 @@ export class ApiClient {
             // Ignore parsing errors for error responses
           }
 
-          const finalErrorResponse = await this.executeResponseInterceptors(errorResponse);
-          
+          const finalErrorResponse =
+            await this.executeResponseInterceptors(errorResponse);
+
           // Check if we should retry this error
-          if (this.shouldRetry({ status: response.status, response: errorResponse }, attempt, retryConfig)) {
+          if (
+            this.shouldRetry(
+              { status: response.status, response: errorResponse },
+              attempt,
+              retryConfig
+            )
+          ) {
             lastError = finalErrorResponse;
             await this.sleep(this.calculateRetryDelay(attempt, retryConfig));
             continue;
           }
-          
+
           return finalErrorResponse;
         }
 
         // Parse successful response
         let responseData: T;
         const contentType = response.headers.get('content-type');
-        
+
         if (contentType && contentType.includes('application/json')) {
           responseData = await response.json();
         } else {
-          responseData = await response.text() as T;
+          responseData = (await response.text()) as T;
         }
 
         // Apply response transformation
@@ -311,16 +340,15 @@ export class ApiClient {
         };
 
         return await this.executeResponseInterceptors(successResponse);
-
       } catch (error) {
         lastError = error;
-        
+
         // Check if we should retry this error
         if (this.shouldRetry(error, attempt, retryConfig)) {
           await this.sleep(this.calculateRetryDelay(attempt, retryConfig));
           continue;
         }
-        
+
         // Final error response
         const errorResponse: ApiResponse<T> = {
           type: 'error',
@@ -371,11 +399,11 @@ const defaultClient = new ApiClient();
 
 // Enhanced createRequest function (backward compatible)
 export async function createRequest<T = any>(
-  url = "",
+  url = '',
   headers = {},
   method?: MethodType,
   body: any = {},
-  rest?: Partial<Omit<RequestType, "headers" | "url" | "method" | "body">>
+  rest?: Partial<Omit<RequestType, 'headers' | 'url' | 'method' | 'body'>>
 ): Promise<ApiResponse<T>> {
   return defaultClient.request<T>({
     url,
@@ -394,36 +422,36 @@ export function makeRequest<T = any>(
   if (!payload) {
     return Promise.resolve(undefined);
   }
-  
-  if (typeof payload === "string") {
+
+  if (typeof payload === 'string') {
     return createRequest<T>(payload, headers);
   }
-  
+
   const { url, method, body, ...rest } = payload;
   return createRequest<T>(url, headers, method, body, rest);
 }
 
 // Utility functions for common HTTP methods
 export const api = {
-  get: <T = any>(url: string, config?: RequestConfig) => 
+  get: <T = any>(url: string, config?: RequestConfig) =>
     defaultClient.request<T>({ ...config, url, method: 'GET' }),
-    
-  post: <T = any>(url: string, data?: any, config?: RequestConfig) => 
+
+  post: <T = any>(url: string, data?: any, config?: RequestConfig) =>
     defaultClient.request<T>({ ...config, url, method: 'POST', body: data }),
-    
-  put: <T = any>(url: string, data?: any, config?: RequestConfig) => 
+
+  put: <T = any>(url: string, data?: any, config?: RequestConfig) =>
     defaultClient.request<T>({ ...config, url, method: 'PUT', body: data }),
-    
-  patch: <T = any>(url: string, data?: any, config?: RequestConfig) => 
+
+  patch: <T = any>(url: string, data?: any, config?: RequestConfig) =>
     defaultClient.request<T>({ ...config, url, method: 'PATCH', body: data }),
-    
-  delete: <T = any>(url: string, config?: RequestConfig) => 
+
+  delete: <T = any>(url: string, config?: RequestConfig) =>
     defaultClient.request<T>({ ...config, url, method: 'DELETE' }),
-    
-  head: <T = any>(url: string, config?: RequestConfig) => 
+
+  head: <T = any>(url: string, config?: RequestConfig) =>
     defaultClient.request<T>({ ...config, url, method: 'HEAD' }),
-    
-  options: <T = any>(url: string, config?: RequestConfig) => 
+
+  options: <T = any>(url: string, config?: RequestConfig) =>
     defaultClient.request<T>({ ...config, url, method: 'OPTIONS' }),
 };
 

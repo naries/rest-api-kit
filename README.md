@@ -9,7 +9,7 @@
 
 **The ultimate TypeScript-first REST API management library for React and React Native applications**
 
-*Take complete control of your API calls, caching, and state management with enterprise-grade features and developer-friendly APIs.*
+_Take complete control of your API calls, caching, and state management with enterprise-grade features and developer-friendly APIs._
 
 </div>
 
@@ -39,6 +39,7 @@ pnpm add rest-api-kit
 ```
 
 ### Peer Dependencies
+
 ```bash
 npm install react@^17.0.0 || ^18.0.0
 ```
@@ -55,7 +56,7 @@ import { createRestBase } from 'rest-api-kit';
 
 export const api = createRestBase({
   baseUrl: 'https://jsonplaceholder.typicode.com',
-  prepareHeaders: (headers) => {
+  prepareHeaders: headers => {
     // Add authentication, content-type, etc.
     const token = localStorage.getItem('authToken'); // or from your auth system
     if (token) {
@@ -66,6 +67,8 @@ export const api = createRestBase({
   },
 });
 ```
+
+> **💡 New in v0.0.53**: You can now create **multiple `createRestBase` instances** for different APIs and call **`createEndpoints` multiple times** to organize your endpoints across files. [Learn more →](./docs/guides/MULTIPLE_ENDPOINTS_GUIDE.md)
 
 ### 2. Define Your Endpoints
 
@@ -80,32 +83,31 @@ export const {
   useUpdateTodo,
   useDeleteTodo,
   useGetUser,
-} = api.createEndpoints((builder) => ({
-  
+} = api.createEndpoints(builder => ({
   // GET endpoint with response typing
   getTodos: builder<
     Todo[], // Response type
-    void    // Request body type (void for GET)
+    void // Request body type (void for GET)
   >({
     url: '/todos',
     params: {
       method: 'GET',
-      preferCacheValue: true,  // Use cache if available
-      saveToCache: true,       // Save response to cache
+      preferCacheValue: true, // Use cache if available
+      saveToCache: true, // Save response to cache
     },
   }),
 
   // POST endpoint with request/response typing
   createTodo: builder<
-    Todo,                    // Response type
-    CreateTodoRequest       // Request body type
+    Todo, // Response type
+    CreateTodoRequest // Request body type
   >({
     url: '/todos',
     params: {
       method: 'POST',
       preferCacheValue: false,
       saveToCache: false,
-      updates: ['getTodos'],  // Clear getTodos cache after creation
+      updates: ['getTodos'], // Clear getTodos cache after creation
       transformResponse: (data, requestBody) => {
         // Transform response data
         return { ...data, locallyCreated: true };
@@ -114,10 +116,7 @@ export const {
   }),
 
   // PUT endpoint
-  updateTodo: builder<
-    Todo,
-    UpdateTodoRequest & { id: string }
-  >({
+  updateTodo: builder<Todo, UpdateTodoRequest & { id: string }>({
     url: '/todos',
     params: {
       method: 'PUT',
@@ -127,10 +126,7 @@ export const {
   }),
 
   // DELETE endpoint
-  deleteTodo: builder<
-    { success: boolean },
-    { id: string }
-  >({
+  deleteTodo: builder<{ success: boolean }, { id: string }>({
     url: '/todos',
     params: {
       method: 'DELETE',
@@ -140,10 +136,7 @@ export const {
   }),
 
   // GET with parameters
-  getUser: builder<
-    User,
-    { userId: string }
-  >({
+  getUser: builder<User, { userId: string }>({
     url: '/users',
     params: {
       method: 'GET',
@@ -189,56 +182,54 @@ import React, { useEffect } from 'react';
 import { useGetTodos, useCreateTodo, useDeleteTodo } from '../api/endpoints';
 
 const TodoList: React.FC = () => {
-  // Destructure trigger function and state
-  const [getTodos, { data: todos, loading, error }] = useGetTodos();
+  // Destructure trigger function and state object
+  const [getTodos, todosState] = useGetTodos();
   const [createTodo, createState] = useCreateTodo();
   const [deleteTodo, deleteState] = useDeleteTodo();
 
   // Load todos on component mount
   useEffect(() => {
     getTodos();
-  }, []);
+  }, [getTodos]);
 
-  const handleCreateTodo = async () => {
-    const result = await createTodo({
+  const handleCreateTodo = () => {
+    createTodo({
       title: 'New Todo',
       completed: false,
       userId: 1,
     });
-    
-    if (result.type === 'success') {
-      console.log('Todo created:', result.data);
-    }
+    // After successful creation, getTodos cache will be automatically cleared
+    // You can check createState.isSuccess to show notifications
   };
 
-  const handleDeleteTodo = async (id: string) => {
-    const result = await deleteTodo({ id });
-    
-    if (result.type === 'success') {
-      console.log('Todo deleted successfully');
-    }
+  const handleDeleteTodo = (id: string) => {
+    deleteTodo({ id });
+    // Check deleteState.isSuccess to show success message
   };
 
-  if (loading) return <div>Loading todos...</div>;
-  if (error) return <div>Error: {error}</div>;
+  if (todosState.isLoading) return <div>Loading todos...</div>;
+  if (todosState.error) return <div>Error: {String(todosState.error)}</div>;
 
   return (
     <div>
       <h1>Todos</h1>
-      
-      <button onClick={handleCreateTodo} disabled={createState.loading}>
-        {createState.loading ? 'Creating...' : 'Add Todo'}
+
+      <button onClick={handleCreateTodo} disabled={createState.isLoading}>
+        {createState.isLoading ? 'Creating...' : 'Add Todo'}
       </button>
 
+      {createState.isSuccess && <div>Todo created successfully!</div>}
+      {deleteState.isSuccess && <div>Todo deleted successfully!</div>}
+
       <ul>
-        {todos?.map((todo) => (
+        {todosState.data?.map((todo) => (
           <li key={todo.id}>
             <span style={{ textDecoration: todo.completed ? 'line-through' : 'none' }}>
               {todo.title}
             </span>
-            <button 
+            <button
               onClick={() => handleDeleteTodo(todo.id.toString())}
-              disabled={deleteState.loading}
+              disabled={deleteState.isLoading}
             >
               Delete
             </button>
@@ -261,20 +252,40 @@ Rest API Kit works seamlessly with React Native:
 ```typescript
 // api/base.ts (React Native)
 import { createRestBase } from 'rest-api-kit';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const api = createRestBase({
   baseUrl: 'https://your-api.com/v1',
-  prepareHeaders: async (headers) => {
-    // Get token from AsyncStorage
-    const token = await AsyncStorage.getItem('authToken');
-    if (token) {
-      headers.set('Authorization', `Bearer ${token}`);
+  prepareHeaders: (headers) => {
+    // Note: prepareHeaders is synchronous, not async
+    // For async operations, get the token before calling the API
+    headers.set('Content-Type', 'application/json');
+    return headers;
+  },
+});
+
+// For authentication with AsyncStorage, handle it in your auth flow:
+// Store the token globally or in a context, then access it synchronously
+let authToken: string | null = null;
+
+export const setAuthToken = (token: string | null) => {
+  authToken = token;
+};
+
+export const authenticatedApi = createRestBase({
+  baseUrl: 'https://your-api.com/v1',
+  prepareHeaders: (headers) => {
+    if (authToken) {
+      headers.set('Authorization', `Bearer ${authToken}`);
     }
     headers.set('Content-Type', 'application/json');
     return headers;
   },
 });
+
+// In your auth flow:
+// import AsyncStorage from '@react-native-async-storage/async-storage';
+// const token = await AsyncStorage.getItem('authToken');
+// setAuthToken(token);
 
 // components/UserProfile.tsx (React Native)
 import React, { useEffect } from 'react';
@@ -282,13 +293,13 @@ import { View, Text, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useGetUser } from '../api/endpoints';
 
 const UserProfile: React.FC<{ userId: string }> = ({ userId }) => {
-  const [getUser, { data: user, loading, error }] = useGetUser();
+  const [getUser, userState] = useGetUser();
 
   useEffect(() => {
     getUser({ userId });
-  }, [userId]);
+  }, [userId, getUser]);
 
-  if (loading) {
+  if (userState.isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" />
@@ -297,18 +308,18 @@ const UserProfile: React.FC<{ userId: string }> = ({ userId }) => {
     );
   }
 
-  if (error) {
+  if (userState.error) {
     return (
       <View style={{ padding: 20 }}>
-        <Text style={{ color: 'red' }}>Error: {error}</Text>
+        <Text style={{ color: 'red' }}>Error: {String(userState.error)}</Text>
       </View>
     );
   }
 
   return (
     <View style={{ padding: 20 }}>
-      <Text style={{ fontSize: 24, fontWeight: 'bold' }}>{user?.name}</Text>
-      <Text style={{ fontSize: 16, color: 'gray' }}>{user?.email}</Text>
+      <Text style={{ fontSize: 24, fontWeight: 'bold' }}>{userState.data?.name}</Text>
+      <Text style={{ fontSize: 16, color: 'gray' }}>{userState.data?.email}</Text>
     </View>
   );
 };
@@ -319,6 +330,46 @@ export default UserProfile;
 ---
 
 ## 🏗️ Advanced Features
+
+### 📁 Multiple Endpoints & Base URLs (NEW!)
+
+Organize your APIs across multiple files and connect to multiple services with ease!
+
+**Organize endpoints by feature:**
+
+```typescript
+// api/auth.ts - Authentication endpoints
+export const { useLogin, useSignup, useLogout } = api.createEndpoints(
+  builder => ({
+    login: builder({ url: '/auth/login', params: { method: 'POST' } }),
+    signup: builder({ url: '/auth/signup', params: { method: 'POST' } }),
+    logout: builder({ url: '/auth/logout', params: { method: 'POST' } }),
+  })
+);
+
+// api/users.ts - User endpoints
+export const { useGetUser, useUpdateUser } = api.createEndpoints(builder => ({
+  getUser: builder({ url: '/users', params: { method: 'GET' } }),
+  updateUser: builder({ url: '/users', params: { method: 'PUT' } }),
+}));
+```
+
+**Connect to multiple APIs:**
+
+```typescript
+// Main application API
+const mainApi = createRestBase({ baseUrl: 'https://api.myapp.com' });
+
+// Analytics API
+const analyticsApi = createRestBase({ baseUrl: 'https://analytics.myapp.com' });
+
+// Payment API
+const paymentApi = createRestBase({ baseUrl: 'https://payments.stripe.com' });
+```
+
+**[📖 Read the complete guide →](./docs/guides/MULTIPLE_ENDPOINTS_GUIDE.md)** with real-world examples and best practices!
+
+---
 
 ### Middleware System
 
@@ -349,12 +400,14 @@ storeMethods.addMiddleware(loggingMiddleware);
 storeMethods.addMiddleware(authMiddleware);
 ```
 
-### Request Interceptors
+### Request Interceptors (Using ApiClient)
+
+The library exports an `ApiClient` class for advanced HTTP client features:
 
 ```typescript
-import { createRequest, makeRequest } from 'rest-api-kit';
+import { ApiClient } from 'rest-api-kit';
 
-// Custom request with interceptors
+// Create API client with advanced configuration
 const apiClient = new ApiClient({
   baseURL: 'https://api.example.com',
   timeout: 10000,
@@ -364,13 +417,13 @@ const apiClient = new ApiClient({
 
 // Request interceptor
 apiClient.addRequestInterceptor({
-  onRequest: async (config) => {
+  onRequest: async config => {
     // Add timestamp to all requests
     config.headers = config.headers || {};
     config.headers['X-Request-Time'] = Date.now().toString();
     return config;
   },
-  onRequestError: async (error) => {
+  onRequestError: async error => {
     console.error('Request failed:', error);
     throw error;
   },
@@ -378,7 +431,7 @@ apiClient.addRequestInterceptor({
 
 // Response interceptor
 apiClient.addResponseInterceptor({
-  onResponse: async (response) => {
+  onResponse: async response => {
     // Log response time
     const requestTime = response.headers.get('X-Request-Time');
     if (requestTime) {
@@ -386,18 +439,23 @@ apiClient.addResponseInterceptor({
     }
     return response;
   },
-  onResponseError: async (error) => {
+  onResponseError: async error => {
     if (error.status === 401) {
       // Handle unauthorized
       await refreshToken();
-      throw error;
     }
-    return error;
+    throw error;
   },
+});
+
+// Make requests with the configured client
+const response = await apiClient.request({
+  url: '/users',
+  method: 'GET',
 });
 ```
 
-### Optimistic Updates
+### Cache Management
 
 ```typescript
 const [updateTodo, { loading, error }] = useUpdateTodo();
@@ -405,16 +463,16 @@ const [updateTodo, { loading, error }] = useUpdateTodo();
 const handleToggleTodo = async (todo: Todo) => {
   // Optimistic update
   const optimisticData = { ...todo, completed: !todo.completed };
-  
+
   // Update UI immediately
   updateTodoInCache(todo.id, optimisticData);
-  
+
   try {
     const result = await updateTodo({
       id: todo.id.toString(),
       completed: optimisticData.completed,
     });
-    
+
     if (result.type === 'error') {
       // Revert on error
       updateTodoInCache(todo.id, todo);
@@ -434,12 +492,12 @@ import { useStore, useStoreSelector } from 'rest-api-kit';
 
 const Dashboard: React.FC = () => {
   const store = useStore();
-  
+
   // Selective subscriptions for performance
   const userCount = useStoreSelector(
     state => Object.keys(state).filter(key => key.startsWith('user-')).length
   );
-  
+
   const todoCount = useStoreSelector(
     state => Object.keys(state).filter(key => key.startsWith('todo-')).length
   );
@@ -473,21 +531,21 @@ const Dashboard: React.FC = () => {
 ```typescript
 const api = createRestBase({
   baseUrl: 'https://api.example.com/v1',
-  
-  prepareHeaders: (headers) => {
+
+  prepareHeaders: headers => {
     // Global headers for all requests
     headers.set('Content-Type', 'application/json');
     headers.set('Accept', 'application/json');
-    
+
     // Conditional headers
     const token = getAuthToken();
     if (token) {
       headers.set('Authorization', `Bearer ${token}`);
     }
-    
+
     // API versioning
     headers.set('API-Version', '2023-08-01');
-    
+
     return headers;
   },
 });
@@ -501,46 +559,46 @@ builder<ResponseType, RequestType>({
   params: {
     // HTTP method
     method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH',
-    
+
     // Caching behavior
-    preferCacheValue: true,    // Use cached data if available
-    saveToCache: true,         // Save response to cache
-    
+    preferCacheValue: true, // Use cached data if available
+    saveToCache: true, // Save response to cache
+
     // Cache invalidation
     updates: ['endpoint1', 'endpoint2'], // Clear these caches after success
-    
+
     // URL building
     buildUrl: (baseUrl, requestBody) => `${baseUrl}/custom/${requestBody.id}`,
-    
+
     // Data transformation
     transformResponse: (data, requestBody) => {
       // Transform response data
       return { ...data, transformed: true };
     },
-    
+
     // Success condition
-    successCondition: (data) => {
+    successCondition: data => {
       // Custom success validation
       return data.status === 'ok';
     },
-    
+
     // Custom headers for this endpoint
     headers: {
       'X-Custom-Header': 'value',
     },
-    
+
     // Retry configuration
     retries: 3,
     retryDelay: 1000,
-    retryCondition: (error) => error.status >= 500,
-    
+    retryCondition: error => error.status >= 500,
+
     // Timeout
     timeout: 30000,
-    
+
     // Request/Response validation
-    validateStatus: (status) => status >= 200 && status < 300,
+    validateStatus: status => status >= 200 && status < 300,
   },
-})
+});
 ```
 
 ---
@@ -574,7 +632,7 @@ const [uploadFile, { loading, progress }] = useUploadFile();
 const handleFileUpload = async (file: File) => {
   const result = await uploadFile({
     file,
-    metadata: { userId: 123, category: 'profile' }
+    metadata: { userId: 123, category: 'profile' },
   });
 };
 ```
@@ -589,7 +647,7 @@ const useGetPaginatedTodos = builder<
   url: '/todos',
   params: {
     method: 'GET',
-    buildUrl: (baseUrl, { page, limit }) => 
+    buildUrl: (baseUrl, { page, limit }) =>
       `${baseUrl}?page=${page}&limit=${limit}`,
     transformResponse: (data) => ({
       todos: data.items,
@@ -603,30 +661,35 @@ const useGetPaginatedTodos = builder<
 const InfiniteTodoList: React.FC = () => {
   const [page, setPage] = useState(1);
   const [allTodos, setAllTodos] = useState<Todo[]>([]);
-  const [getTodos, { data, loading }] = useGetPaginatedTodos();
+  const [getTodos, todosState] = useGetPaginatedTodos();
 
-  const loadMoreTodos = async () => {
-    const result = await getTodos({ page, limit: 20 });
-    
-    if (result.type === 'success') {
-      setAllTodos(prev => [...prev, ...result.data.todos]);
-      setPage(prev => prev + 1);
-    }
+  const loadMoreTodos = () => {
+    getTodos({ page, limit: 20 });
   };
 
   useEffect(() => {
     loadMoreTodos();
   }, []);
 
+  // Watch for successful data fetch
+  useEffect(() => {
+    if (todosState.isSuccess && todosState.data) {
+      setAllTodos(prev => [...prev, ...todosState.data.todos]);
+      if (todosState.data.hasMore) {
+        setPage(prev => prev + 1);
+      }
+    }
+  }, [todosState.isSuccess, todosState.data]);
+
   return (
     <div>
       {allTodos.map(todo => (
         <TodoItem key={todo.id} todo={todo} />
       ))}
-      
-      {data?.hasMore && (
-        <button onClick={loadMoreTodos} disabled={loading}>
-          {loading ? 'Loading...' : 'Load More'}
+
+      {todosState.data?.hasMore && (
+        <button onClick={loadMoreTodos} disabled={todosState.isLoading}>
+          {todosState.isLoading ? 'Loading...' : 'Load More'}
         </button>
       )}
     </div>
@@ -641,8 +704,8 @@ import { useStoreEvents } from 'rest-api-kit';
 
 const useRealTimeUpdates = () => {
   const [getTodos] = useGetTodos();
-  
-  useStoreEvents((event) => {
+
+  useStoreEvents(event => {
     // Listen for specific store changes
     if (event.type === 'save' && event.payload.id === 'todos') {
       // Todos updated, you might want to notify user
@@ -653,10 +716,10 @@ const useRealTimeUpdates = () => {
   useEffect(() => {
     // WebSocket connection for real-time updates
     const ws = new WebSocket('wss://api.example.com/updates');
-    
-    ws.onmessage = (event) => {
+
+    ws.onmessage = event => {
       const update = JSON.parse(event.data);
-      
+
       if (update.type === 'todo_updated') {
         // Refresh todos when server sends update
         getTodos();
@@ -699,11 +762,11 @@ jest.mock('../api/endpoints', () => ({
 
 test('renders todos and handles creation', async () => {
   render(<TodoList />);
-  
+
   expect(screen.getByText('Test Todo')).toBeInTheDocument();
-  
+
   fireEvent.click(screen.getByText('Add Todo'));
-  
+
   await waitFor(() => {
     expect(screen.getByText('Creating...')).toBeInTheDocument();
   });
@@ -728,10 +791,10 @@ afterEach(() => {
 test('API integration', async () => {
   const api = createRestBase({
     baseUrl: 'https://test-api.com',
-    prepareHeaders: (headers) => headers,
+    prepareHeaders: headers => headers,
   });
 
-  const { useGetTodos } = api.createEndpoints((builder) => ({
+  const { useGetTodos } = api.createEndpoints(builder => ({
     getTodos: builder<Todo[], void>({
       url: '/todos',
       params: { method: 'GET' },
@@ -744,11 +807,14 @@ test('API integration', async () => {
   );
 
   // Test the API call
-  const [getTodos] = useGetTodos();
-  const result = await getTodos();
+  const [getTodos, todosState] = useGetTodos();
+  getTodos();
 
-  expect(result.type).toBe('success');
-  expect(result.data).toHaveLength(1);
+  // Wait for state to update
+  await waitFor(() => expect(todosState.isSuccess).toBe(true));
+
+  expect(todosState.data).toHaveLength(1);
+  expect(todosState.data[0].title).toBe('Test');
 });
 ```
 
@@ -771,21 +837,21 @@ import { createRequest } from 'rest-api-kit/core';
 // Automatic cleanup
 const MyComponent: React.FC = () => {
   const [getTodos, state] = useGetTodos();
-  
+
   // Component automatically cleans up subscriptions on unmount
   // No manual cleanup required!
-  
+
   return <div>{/* component content */}</div>;
 };
 
 // Manual cache management for large apps
 const clearUnusedCache = () => {
   const store = useStore();
-  
+
   // Clear old data
   const oneHourAgo = Date.now() - 60 * 60 * 1000;
   const entries = store.entries();
-  
+
   entries.forEach(([key, value]) => {
     if (value.timestamp && value.timestamp < oneHourAgo) {
       store.clear(key);
@@ -833,7 +899,7 @@ useEffect(() => {
 const todosApi = createApi({
   reducerPath: 'todosApi',
   baseQuery: fetchBaseQuery({ baseUrl: '/api' }),
-  endpoints: (builder) => ({
+  endpoints: builder => ({
     getTodos: builder.query<Todo[], void>({
       query: () => 'todos',
     }),
@@ -841,7 +907,7 @@ const todosApi = createApi({
 });
 
 // ✅ After (Rest API Kit)
-const { useGetTodos } = api.createEndpoints((builder) => ({
+const { useGetTodos } = api.createEndpoints(builder => ({
   getTodos: builder<Todo[], void>({
     url: '/todos',
     params: { method: 'GET' },
@@ -856,38 +922,80 @@ const { useGetTodos } = api.createEndpoints((builder) => ({
 ### Core Functions
 
 #### `createRestBase(options)`
+
 Creates the base API instance.
 
 **Parameters:**
+
 - `baseUrl`: string - Base URL for all requests
 - `prepareHeaders`: (headers: Headers) => Headers - Global header preparation
 
 #### `builder<ResponseType, RequestType>(config)`
+
 Creates a typed endpoint configuration.
 
 **Type Parameters:**
+
 - `ResponseType`: Type of the API response
 - `RequestType`: Type of the request body/parameters
 
-### Hook Returns
+### Hook Return Structure
+
+Each generated hook returns a tuple `[triggerFunction, state]`:
 
 ```typescript
 const [triggerFunction, state] = useEndpoint();
 ```
 
 **Trigger Function:**
-- Returns: `Promise<ApiResponse<ResponseType>>`
-- Parameters: RequestType (if not void)
 
-**State Object:**
-- `data`: ResponseType | undefined
-- `loading`: boolean
-- `error`: string | null
-- `lastFetched`: number | null
+```typescript
+(body?: RequestType) => void
+```
+
+- **Parameters**: Request body (if `RequestType` is not `void`)
+- **Returns**: `void` (updates state asynchronously)
+- **Note**: The trigger function does NOT return a Promise or result object
+
+**State Object Properties:**
+
+```typescript
+{
+  data: ResponseType | undefined; // Response data
+  isLoading: boolean; // Loading state
+  error: unknown; // Error object/message
+  isSuccess: boolean; // Success indicator
+  response: unknown; // Raw response
+  extra: unknown; // Additional data
+}
+```
+
+**Example Usage:**
+
+```typescript
+const [getTodos, todosState] = useGetTodos();
+
+// Trigger the request
+getTodos();
+
+// Access state
+if (todosState.isLoading) {
+  console.log('Loading...');
+}
+
+if (todosState.isSuccess && todosState.data) {
+  console.log('Todos:', todosState.data);
+}
+
+if (todosState.error) {
+  console.error('Error:', todosState.error);
+}
+```
 
 ### Store Functions
 
 #### `useStore()`
+
 - `save(id, data, options?)`: Save data to store
 - `get(id)`: Retrieve data from store
 - `update(id, partialData)`: Update existing data
@@ -896,10 +1004,38 @@ const [triggerFunction, state] = useEndpoint();
 - `batch(operations)`: Perform multiple operations
 
 #### `useStoreSelector(selector, equalityFn?)`
+
 Subscribe to specific store data with performance optimization.
 
 #### `useStoreEvents(listener, options?)`
+
 Listen to store events for debugging and logging.
+
+---
+
+## 📚 Documentation
+
+### Quick Links
+
+- **[Complete Documentation](./docs/README.md)** - Full documentation index
+- **[API Reference](#-api-reference)** - Detailed API documentation
+- **[Examples](./examples/)** - Real-world usage examples
+- **[Contributing Guide](./CONTRIBUTING.md)** - How to contribute
+- **[Changelog](./CHANGELOG.md)** - Version history
+
+### Guides
+
+- [Multiple Endpoints Guide](./docs/guides/MULTIPLE_ENDPOINTS_GUIDE.md) - Organize APIs across files
+- [Hook Behavior](./docs/guides/HOOK_BEHAVIOR.md) - Understanding hooks
+- [Type Safety](./docs/guides/TYPE_SAFETY.md) - TypeScript usage
+- [Store Management](./docs/guides/STORE_GUIDE.md) - Caching and state
+- [Troubleshooting](./docs/guides/TROUBLESHOOTING.md) - Common issues
+
+### Project Information
+
+- [Project Structure](./docs/PROJECT_STRUCTURE.md) - Code organization
+- [Development Workflow](./docs/DEVELOPMENT.md) - Development stages
+- [Security Policy](./SECURITY.md) - Reporting vulnerabilities
 
 ---
 

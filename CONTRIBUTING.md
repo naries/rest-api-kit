@@ -4,34 +4,60 @@ Thank you for your interest in contributing to Rest API Kit! 🎉
 
 We welcome contributions from developers of all skill levels. Whether you're fixing bugs, adding features, improving documentation, or sharing feedback, your contributions help make Rest API Kit better for everyone.
 
-## 🚀 Quick Start
+## � Documentation
+
+For detailed information about our development workflow, branching strategy, and release process, please see:
+
+- **[Development Guide](./docs/DEVELOPMENT.md)** - Complete development workflow and stages
+- **[Project Structure](./docs/PROJECT_STRUCTURE.md)** - Code organization and architecture
+
+## �🚀 Quick Start
 
 ### Development Setup
 
 1. **Fork and Clone**
+
    ```bash
    git clone https://github.com/YOUR_USERNAME/rest-api-kit.git
    cd rest-api-kit
    ```
 
 2. **Install Dependencies**
+
    ```bash
    npm install
    ```
 
-3. **Run Tests**
+3. **Verify Setup**
    ```bash
-   npm test
-   ```
-
-4. **Build the Project**
-   ```bash
-   npm run build
+   npm run validate   # Runs all checks
+   npm test          # Run tests
+   npm run build     # Build the project
    ```
 
 ## 🔧 Development Workflow
 
+**See [Development Guide](./docs/DEVELOPMENT.md) for the complete workflow.**
+
+### Quick Reference
+
+```bash
+# Development
+npm run dev              # Watch mode development
+npm run test:watch       # Tests in watch mode
+
+# Quality Checks
+npm run validate         # Run all checks before committing
+npm run lint:fix         # Fix linting issues
+npm run format           # Format code
+
+# Testing
+npm test                 # Run all tests
+npm run test:coverage    # With coverage report
+```
+
 ### Project Structure
+
 ```
 rest-api-kit/
 ├── src/
@@ -51,6 +77,7 @@ rest-api-kit/
 ```
 
 ### Scripts
+
 - `npm test` - Run all tests
 - `npm run test:watch` - Run tests in watch mode
 - `npm run build` - Build the library
@@ -61,6 +88,7 @@ rest-api-kit/
 We use Jest for testing. All code changes should include appropriate tests.
 
 ### Running Tests
+
 ```bash
 # Run all tests
 npm test
@@ -75,13 +103,14 @@ npm test -- hooks/useRest.test.ts
 ### Writing Tests
 
 #### Component Tests
+
 ```typescript
 import { renderHook, act } from '@testing-library/react-hooks';
 import { useGetTodos } from '../api/endpoints';
 
 test('should fetch todos successfully', async () => {
   const { result } = renderHook(() => useGetTodos());
-  
+
   await act(async () => {
     const response = await result.current[0]();
     expect(response.type).toBe('success');
@@ -90,6 +119,7 @@ test('should fetch todos successfully', async () => {
 ```
 
 #### API Tests
+
 ```typescript
 import fetchMock from 'jest-fetch-mock';
 import { createRequest } from '../apifunctions';
@@ -100,7 +130,7 @@ beforeEach(() => {
 
 test('should handle API requests', async () => {
   fetchMock.mockResponseOnce(JSON.stringify({ success: true }));
-  
+
   const response = await createRequest('/test');
   expect(response.type).toBe('success');
 });
@@ -109,6 +139,7 @@ test('should handle API requests', async () => {
 ## 📝 Code Style
 
 ### TypeScript Guidelines
+
 - Use strict TypeScript configuration
 - Provide explicit types for public APIs
 - Use generics appropriately for reusable components
@@ -128,6 +159,7 @@ const response: any = await fetchData();
 ```
 
 ### Code Organization
+
 - Keep files focused and single-purpose
 - Use descriptive names for functions and variables
 - Add JSDoc comments for public APIs
@@ -155,28 +187,35 @@ When reporting bugs, please include:
 4. **Error Messages**: Full error messages and stack traces
 
 ### Bug Report Template
+
 ```markdown
 ## Bug Description
+
 Brief description of the issue
 
 ## Steps to Reproduce
+
 1. Create component with useGetTodos hook
 2. Call the trigger function
 3. Observe the error
 
 ## Expected Behavior
+
 Should fetch todos successfully
 
 ## Actual Behavior
+
 Throws network error
 
 ## Environment
+
 - OS: macOS 12.0
 - Node.js: 18.0.0
 - React: 18.0.0
 - rest-api-kit: 0.0.53
 
 ## Additional Context
+
 Any other relevant information
 ```
 
@@ -190,27 +229,35 @@ We love feature ideas! When suggesting features:
 4. **Implementation**: Any thoughts on implementation approach?
 
 ### Feature Request Template
-```markdown
+
+````markdown
 ## Problem Statement
+
 Describe the problem or limitation
 
 ## Proposed Solution
+
 How should this feature work?
 
 ## Example Usage
+
 ```typescript
 // Show how the feature would be used
 const [getData, state] = useGetData({
-  newFeature: true
+  newFeature: true,
 });
 ```
+````
 
 ## Use Cases
+
 What scenarios would this help with?
 
 ## Implementation Notes
+
 Any thoughts on how to implement this?
-```
+
+````
 
 ## 🔄 Pull Request Process
 
@@ -223,7 +270,7 @@ Any thoughts on how to implement this?
 1. **Create Branch**
    ```bash
    git checkout -b feature/your-feature-name
-   ```
+````
 
 2. **Make Changes**
    - Write your code
@@ -231,6 +278,7 @@ Any thoughts on how to implement this?
    - Update documentation if needed
 
 3. **Test Your Changes**
+
    ```bash
    npm test
    npm run build
@@ -243,6 +291,7 @@ Any thoughts on how to implement this?
    ```
 
 ### Commit Message Format
+
 We follow conventional commits:
 
 - `feat:` - New features
@@ -253,6 +302,7 @@ We follow conventional commits:
 - `chore:` - Maintenance tasks
 
 Examples:
+
 ```
 feat: add retry logic to HTTP requests
 fix: resolve memory leak in store listeners
@@ -261,6 +311,7 @@ test: add comprehensive store management tests
 ```
 
 ### Pull Request Guidelines
+
 1. **Clear Title**: Descriptive title explaining the change
 2. **Description**: Detailed explanation of what and why
 3. **Breaking Changes**: Clearly mark any breaking changes
@@ -268,48 +319,58 @@ test: add comprehensive store management tests
 5. **Documentation**: Update docs for new features
 
 ### PR Template
+
 ```markdown
 ## Description
+
 Brief description of changes
 
 ## Type of Change
+
 - [ ] Bug fix
 - [ ] New feature
 - [ ] Breaking change
 - [ ] Documentation update
 
 ## Testing
+
 - [ ] All existing tests pass
 - [ ] New tests added for changes
 - [ ] Manual testing completed
 
 ## Documentation
+
 - [ ] README updated
 - [ ] API documentation updated
 - [ ] Examples added/updated
 
 ## Breaking Changes
+
 List any breaking changes and migration path
 
 ## Additional Notes
+
 Any other relevant information
 ```
 
 ## 📖 Documentation
 
 ### Types of Documentation
+
 1. **README**: Overview and quick start guide
 2. **API Reference**: Detailed function/hook documentation
 3. **Examples**: Real-world usage examples
 4. **Guides**: Step-by-step tutorials
 
 ### Documentation Standards
+
 - Use clear, concise language
 - Provide working code examples
 - Include both React and React Native examples
 - Keep examples up-to-date with latest API
 
 ### Adding Examples
+
 ```typescript
 // examples/todo-app/TodoList.tsx
 import React, { useEffect } from 'react';
@@ -335,6 +396,7 @@ export const TodoList: React.FC = () => {
 ## 🤝 Code Review Process
 
 ### What We Look For
+
 1. **Correctness**: Does the code work as intended?
 2. **Performance**: Are there performance implications?
 3. **Type Safety**: Proper TypeScript usage
@@ -343,6 +405,7 @@ export const TodoList: React.FC = () => {
 6. **Breaking Changes**: Impact on existing users
 
 ### Review Guidelines
+
 - Be constructive and respectful
 - Explain the reasoning behind suggestions
 - Ask questions when something is unclear
@@ -351,12 +414,15 @@ export const TodoList: React.FC = () => {
 ## 🚀 Release Process
 
 ### Version Management
+
 We follow semantic versioning (SemVer):
+
 - **MAJOR**: Breaking changes
 - **MINOR**: New features (backward compatible)
 - **PATCH**: Bug fixes (backward compatible)
 
 ### Release Checklist
+
 1. Update version in package.json
 2. Update CHANGELOG.md
 3. Run full test suite
@@ -367,11 +433,13 @@ We follow semantic versioning (SemVer):
 ## 💬 Getting Help
 
 ### Community Support
+
 - **GitHub Discussions**: For questions and ideas
 - **Issues**: For bugs and feature requests
 - **Discord**: Real-time community chat (if available)
 
 ### Maintainer Response Time
+
 - We aim to respond to issues within 48 hours
 - PRs typically reviewed within 1 week
 - Security issues handled with high priority
@@ -386,6 +454,7 @@ We are committed to providing a welcoming and inclusive environment for all cont
 4. **Be Collaborative**: Work together toward common goals
 
 ### Unacceptable Behavior
+
 - Harassment, discrimination, or exclusionary behavior
 - Spam or off-topic discussions
 - Sharing private information without permission
@@ -394,6 +463,7 @@ We are committed to providing a welcoming and inclusive environment for all cont
 ## 🙏 Recognition
 
 Contributors are recognized in several ways:
+
 - Listed in CONTRIBUTORS.md
 - Mentioned in release notes
 - GitHub contributor statistics
@@ -402,6 +472,7 @@ Contributors are recognized in several ways:
 ## 📞 Contact
 
 For questions about contributing:
+
 - Open a GitHub Discussion
 - Create an issue with the "question" label
 - Email: maintainers@rest-api-kit.dev

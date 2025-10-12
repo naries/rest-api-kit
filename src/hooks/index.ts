@@ -1,1 +1,1 @@
-export * from './useRest'
+export * from './useRest';

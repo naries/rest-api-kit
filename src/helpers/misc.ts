@@ -3,7 +3,7 @@ import {
   IOptions,
   RestOptionsType,
   StoreStateType,
-} from "../types";
+} from '../types';
 
 export const concatenateParamsWithUrl = (
   url: string,
@@ -12,14 +12,14 @@ export const concatenateParamsWithUrl = (
   if (!body) {
     return url;
   }
-  if (typeof body === "string") {
+  if (typeof body === 'string') {
     return `${url}${body}`;
   }
   // use paths url contains `/:`
-  if (url.includes("/:")) {
+  if (url.includes('/:')) {
     const queryParams = [];
     for (const [key, value] of Object.entries(body)) {
-      const regex = new RegExp(`/:${key}`, "g");
+      const regex = new RegExp(`/:${key}`, 'g');
       if (regex.test(url)) {
         url = url.replace(regex, `/${value}`);
       } else {
@@ -27,13 +27,13 @@ export const concatenateParamsWithUrl = (
       }
     }
     if (queryParams.length > 0) {
-      url += `?${queryParams.join("&")}`;
+      url += `?${queryParams.join('&')}`;
     }
     return url;
   }
   const queryString = Object.entries(body)
     .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
-    .join("&");
+    .join('&');
 
   return `${url}?${queryString}`;
 };
@@ -47,7 +47,7 @@ export const createUniqueId = (
   }
   const queryString = Object.entries(params)
     .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
-    .join("&");
+    .join('&');
 
   return `${url}&${queryString}`;
 };
@@ -85,7 +85,7 @@ export const getBaseUrl = (url: string, baseUrl?: string) => {
   // check that url and baseurl exists
   // else, throw an error;
   if (!url && !baseUrl) {
-    throw new Error("url not constructed properly");
+    throw new Error('url not constructed properly');
   }
 
   // check that url has a http or https value.
@@ -100,7 +100,7 @@ export const getBaseUrl = (url: string, baseUrl?: string) => {
         return `${baseUrl}/${url}`;
       }
     } else {
-      throw new Error("url not constructed properly");
+      throw new Error('url not constructed properly');
     }
   } else {
     return url;
@@ -111,11 +111,11 @@ export const applyChecks = (params: IOptions, response: unknown) => {
   // check that successCondition exists
   // else, return error
   if (!params.successCondition(response)) {
-    return { type: "error", response };
+    return { type: 'error', response };
   }
 
   return {
-    type: "success",
+    type: 'success',
     response: params.transformResponse(response),
   };
 };
@@ -137,7 +137,7 @@ export const load = (
   delete paramForHere.transformResponse;
 
   dispatch({
-    type: "extra/save",
+    type: 'extra/save',
     payload: {
       url,
       body,

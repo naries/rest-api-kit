@@ -8,10 +8,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Multiple `createEndpoints` calls**: You can now call `createEndpoints` multiple times on the same API instance to organize endpoints across separate files
+- **Multiple `createRestBase` instances**: Support for multiple base URLs in the same application for connecting to different APIs or microservices
+- **Endpoint accumulation**: All endpoints and hooks accumulate across multiple `createEndpoints` calls
+- **Duplicate detection**: Console warnings when duplicate endpoint names are detected
+- Comprehensive guide for multiple endpoints and base URLs (`MULTIPLE_ENDPOINTS_GUIDE.md`)
+- Examples showing API organization by feature (auth, users, todos, etc.)
+- Examples for multi-service applications (main API, analytics, payments, etc.)
 - Comprehensive documentation and examples
 - Enhanced store management with middleware support
 - TypeScript improvements and type safety
 - React Native compatibility examples
+
+### Changed
+- Removed singleton pattern limitation from `createRestBase` - now supports multiple instances
+- Changed `createEndpoints` from one-time initialization to accumulative registration
+- Endpoints and hooks now merge with existing ones instead of replacing them
+
+### Fixed
+- IIFE bug in hook generation that caused "is not a function" errors
+- Removed artificial limitation that prevented multiple `createEndpoints` calls
+- **Debug console.log in useStore hook**: Removed debug logging that was causing console spam for every hook used in components
 
 ## [0.0.53] - 2025-08-28
 

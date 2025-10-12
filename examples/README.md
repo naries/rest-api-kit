@@ -16,6 +16,28 @@ Complex application with middleware, authentication, and real-time features.
 ### 4. Next.js Full-Stack
 Server-side rendering with API routes and client-side state management.
 
+### 5. Organized API (NEW! ⭐)
+**[📂 View Example →](./organized-api/)**
+
+Demonstrates the new **multiple `createEndpoints`** feature for organizing your API across multiple files by domain (auth, users, todos, etc.).
+
+**What you'll learn:**
+- ✅ How to organize endpoints across multiple files
+- ✅ Separating API concerns (auth, users, todos, etc.)
+- ✅ Creating a centralized API export structure
+- ✅ Best practices for team collaboration
+
+### 6. Multiple APIs (NEW! ⭐)
+**[📂 View Example →](./multiple-apis/)**
+
+Shows how to work with **multiple base URLs** in the same application (main API, analytics, payments, etc.).
+
+**What you'll learn:**
+- ✅ Creating multiple `createRestBase` instances
+- ✅ Connecting to different APIs/services
+- ✅ Independent configurations per API
+- ✅ Environment-specific URL management
+
 ## 🎯 What You'll Learn
 
 - ✅ Setting up Rest API Kit in different environments
@@ -25,6 +47,8 @@ Server-side rendering with API routes and client-side state management.
 - ✅ Handling real-time updates
 - ✅ Performance optimization techniques
 - ✅ Testing patterns and best practices
+- ✅ **NEW:** Organizing APIs across multiple files
+- ✅ **NEW:** Working with multiple base URLs
 
 ## 🚀 Getting Started
 
@@ -38,11 +62,13 @@ Pick the example that best matches your use case and follow the README in each d
 
 ## 📱 Platform Support
 
-| Example | React Web | React Native | Next.js | TypeScript |
-|---------|-----------|--------------|---------|------------|
-| Basic Todo | ✅ | ❌ | ❌ | ✅ |
-| Mobile App | ❌ | ✅ | ❌ | ✅ |
-| Enterprise | ✅ | ✅ | ❌ | ✅ |
-| Next.js | ✅ | ❌ | ✅ | ✅ |
+| Example | React Web | React Native | Next.js | TypeScript | v0.0.53+ |
+|---------|-----------|--------------|---------|------------|----------|
+| Basic Todo | ✅ | ❌ | ❌ | ✅ | - |
+| Mobile App | ❌ | ✅ | ❌ | ✅ | - |
+| Enterprise | ✅ | ✅ | ❌ | ✅ | - |
+| Next.js | ✅ | ❌ | ✅ | ✅ | - |
+| **Organized API** | ✅ | ✅ | ✅ | ✅ | **✅** |
+| **Multiple APIs** | ✅ | ✅ | ✅ | ✅ | **✅** |
 
 Happy coding! 🎉

@@ -1,13 +1,13 @@
-import { useReducer } from "react";
+import { useReducer } from 'react';
 import {
   IOptions,
   StoreActionType,
   StoreHookReturnType,
   StoreStateType,
-} from "../types";
-import { deleteId } from "../helpers/misc";
-import storeReducer from "../lib/reducers/store";
-import initStoreState from "../lib/states/store";
+} from '../types';
+import { deleteId } from '../helpers/misc';
+import storeReducer from '../lib/reducers/store';
+import initStoreState from '../lib/states/store';
 
 /**
  * @name useStore
@@ -30,12 +30,10 @@ export function useStore<R = any, T = any>(): StoreHookReturnType<R, T> {
     ) => any
   >(storeReducer, initStoreState);
 
-  console.log("store state => ", state);
-
   return {
     save: (id: string, data: unknown, options: IOptions<R, T>) =>
       dispatch({
-        type: "store/save",
+        type: 'store/save',
         payload: { id, data, options },
       }),
     get: (id: string) => {
@@ -44,7 +42,7 @@ export function useStore<R = any, T = any>(): StoreHookReturnType<R, T> {
     getAll: () => state,
     clear: (id: string) =>
       dispatch({
-        type: "store/clear",
+        type: 'store/clear',
         payload: { id, data: null },
       }),
   };

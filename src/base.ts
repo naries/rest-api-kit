@@ -1,6 +1,6 @@
-import { defaultOptions } from "./defaullts";
-import { capitalizeFirstLetter } from "./helpers/misc";
-import { useRest } from "./hooks";
+import { defaultOptions } from './defaullts';
+import { capitalizeFirstLetter } from './helpers/misc';
+import { useRest } from './hooks';
 import {
   CompleteEndpointFix,
   CompleteEndpointType,
@@ -10,14 +10,14 @@ import {
   QueryHookReturnType,
   RestBaseReturnType,
   RestOptionsType,
-} from "./types";
+} from './types';
 
 export const createRestBase = (
   restBaseOptions: Partial<RestOptionsType> = {}
 ): RestBaseReturnType => {
-  let endpoints: { [x: string]: CompleteEndpointType<any, any> } = {};
-  let hooks: Record<string, () => QueryHookReturnType> = {};
-  let isInitialized = false;
+  // Each createRestBase instance has its own state
+  let allEndpoints: { [x: string]: CompleteEndpointType<any, any> } = {};
+  let allHooks: Record<string, () => QueryHookReturnType> = {};
 
   function build<U, V>(
     endpoint: EndpointType<U, V>
@@ -36,53 +36,58 @@ export const createRestBase = (
       { url, params = defaultOptions },
     ] of Object.entries(endpoints)) {
       const hookName = `use${capitalizeFirstLetter(endpointName)}`;
-      
+
       // Create a closure that captures the endpoint configuration
-      customHooks[hookName] = (() => {
-        // Memoize the useRest call configuration
-        const memoizedConfig = {
-          url,
-          params: { ...params, endpointName: endpointName.toLowerCase() },
-          restBaseOptions
-        };
-        
-        return () => useRest(
+      const memoizedConfig = {
+        url,
+        params: { ...params, endpointName: endpointName.toLowerCase() },
+        restBaseOptions,
+      };
+
+      // Return the hook function directly
+      customHooks[hookName] = () =>
+        useRest(
           memoizedConfig.url,
           memoizedConfig.params,
           memoizedConfig.restBaseOptions
         );
-      })();
     }
 
     return customHooks;
   }
 
-  const setEndpoints = (x: Record<string, CompleteEndpointType<any, any>>) => {
-    endpoints = x;
-  };
-
   const createEndpoints = <T extends CompleteEndpointFix>(
     callback: (builder: EndpointBuilder) => T
   ): RestBaseReturnType<T> => {
-    // Only initialize once per app lifecycle
-    if (!isInitialized) {
-      const builtEndpoints = callback(build);
-      setEndpoints(builtEndpoints);
-      hooks = createCustomHooks(builtEndpoints);
-      isInitialized = true;
-    } else {
+    // Build the new endpoints
+    const builtEndpoints = callback(build);
+
+    // Check for duplicate endpoint names
+    const newEndpointNames = Object.keys(builtEndpoints);
+    const existingEndpointNames = Object.keys(allEndpoints);
+    const duplicates = newEndpointNames.filter(name =>
+      existingEndpointNames.includes(name)
+    );
+
+    if (duplicates.length > 0) {
       console.warn(
-        'rest-api-kit: createEndpoints called multiple times. ' +
-        'Endpoints should be created once at app initialization. ' +
-        'Using previously initialized endpoints.'
+        `rest-api-kit: Duplicate endpoint names detected: ${duplicates.join(', ')}. ` +
+          'The new endpoints will override the previous ones.'
       );
     }
 
-    // Create a new API instance with the hooks attached
+    // Merge new endpoints with existing ones
+    allEndpoints = { ...allEndpoints, ...builtEndpoints };
+
+    // Create hooks for the new endpoints and merge with existing hooks
+    const newHooks = createCustomHooks(builtEndpoints);
+    allHooks = { ...allHooks, ...newHooks };
+
+    // Return a new object with all accumulated hooks
     const apiWithHooks = {
       createEndpoints,
-      endpoints,
-      ...hooks,
+      endpoints: allEndpoints,
+      ...allHooks,
     } as RestBaseReturnType<T>;
 
     return apiWithHooks;
@@ -90,7 +95,7 @@ export const createRestBase = (
 
   return {
     createEndpoints,
-    endpoints,
+    endpoints: allEndpoints,
   } as RestBaseReturnType;
 };
 

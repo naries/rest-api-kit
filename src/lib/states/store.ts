@@ -1,4 +1,4 @@
-import { StoreStateType } from "../../types";
+import { StoreStateType } from '../../types';
 
 const initStoreState: StoreStateType = {};
 
